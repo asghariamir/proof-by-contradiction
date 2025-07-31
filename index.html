@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proof Strategies: Cases & Contradiction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+          },
+          startup: {
+            ready: () => {
+              window.MathJax.startup.defaultReady();
+            }
+          }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d47a1; /* Dark Blue */
+            --primary-light: #e3f2fd;
+            --secondary-color: #4a148c; /* Purple */
+            --success-color: #1b5e20; /* Dark Green */
+            --error-color: #b71c1c; /* Dark Red */
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #424242;
+            --text-color: #212121;
+            --card-color: #ffffff;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        /* --- Global Styles & Structure --- */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6; background-color: var(--light-gray); color: var(--text-color);
+            display: flex; justify-content: center; padding: 1rem;
+        }
+        .container {
+            width: 100%; max-width: 900px; margin: 1rem auto; background-color: var(--card-color);
+            box-shadow: var(--card-shadow); border: 1px solid var(--medium-gray); border-radius: 12px; padding: 2rem;
+        }
+        h1 { font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem; text-align: center; }
+        h2 { font-size: 1.5rem; color: var(--dark-gray); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--medium-gray); padding-bottom: 0.5rem;}
+        h3 { font-size: 1.2rem; color: var(--secondary-color); margin-bottom: 1rem; }
+
+        /* --- Tabs --- */
+        .tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid var(--medium-gray); justify-content: center; }
+        .tab {
+            padding: 0.75rem 1.5rem; background: none; border: none; cursor: pointer; font-size: 1.1rem;
+            color: var(--dark-gray); transition: all 0.3s ease; border-bottom: 4px solid transparent; transform: translateY(2px);
+        }
+        .tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- General Content & Intro Tab --- */
+        .intro-box {
+            background-color: var(--primary-light); border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.5rem; margin-bottom: 1.5rem; border-radius: 8px;
+        }
+        .intro-box ul { list-style-position: inside; padding-left: 0.5rem; margin-top: 0.5rem; }
+        
+        /* --- Strategy Lab --- */
+        .lab-section { padding: 1.5rem; background-color: #fafafa; border-radius: 8px; border: 1px solid var(--medium-gray); margin-bottom: 2rem; }
+        .control-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .control-group label { font-weight: bold; color: var(--dark-gray); }
+        .control-group select, .control-group button, .control-group textarea {
+            padding: 0.75rem; border: 2px solid var(--medium-gray);
+            border-radius: 6px; font-size: 1rem; background-color: white; width: 100%;
+        }
+        .control-group textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+        .control-group button {
+            background-color: var(--primary-color); color: white; font-weight: bold;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        .control-group button:hover { background-color: #1565c0; }
+        
+        #problem-display { padding: 1.5rem; background: #fff; border: 1px solid var(--medium-gray); border-radius: 8px; margin-bottom: 1rem; }
+        #strategy-choice { display: flex; flex-direction: column; gap: 1rem; margin: 1.5rem 0; align-items: center; }
+        .strategy-btn {
+            padding: 0.75rem 1.5rem; border-radius: 6px; font-size: 1rem; cursor: pointer;
+            border: 2px solid var(--secondary-color); background-color: transparent; color: var(--secondary-color);
+            font-weight: bold; transition: all 0.2s; width: 100%; max-width: 400px;
+        }
+        .strategy-btn:hover { background-color: var(--secondary-color); color: white; }
+        
+        #feedback-display { padding: 1rem; border-radius: 8px; border: 1px solid var(--medium-gray); background-color: #fcfcfc; margin-top: 1rem; }
+        .feedback-title { font-weight: bold; color: var(--primary-color); }
+
+        /* --- Proof Sorter --- */
+        #sorter-container { display: none; grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; }
+         @media (min-width: 700px) { #sorter-container { grid-template-columns: 1fr 1.2fr; } }
+        .sorter-column h3 { text-align: center; }
+        #scrambled-steps, #your-proof {
+            min-height: 200px; padding: 1rem; background-color: #fafafa;
+            border: 2px dashed var(--medium-gray); border-radius: 8px;
+        }
+        .proof-card {
+            background-color: white; color: var(--text-color); padding: 0.75rem 1rem;
+            border: 1px solid var(--medium-gray); border-left: 5px solid var(--secondary-color);
+            border-radius: 6px; margin-bottom: 0.75rem; cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none;
+        }
+        .proof-card:active { cursor: grabbing; background-color: #f0f0f0; }
+        .card-error { border-left-color: var(--error-color); }
+        .hint-text {
+            font-size: 0.9rem; color: var(--error-color); font-style: italic;
+            margin-top: -0.5rem; margin-bottom: 0.75rem; padding-left: 1rem;
+        }
+        .drop-zone.drag-over { background-color: var(--primary-light); border-color: var(--primary-color); }
+
+        /* --- Library Tab --- */
+        #library-content .proof-listing {
+             background: #fff; border: 1px solid var(--medium-gray); border-radius: 8px;
+             padding: 1.5rem; margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Proof Strategies</h1>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="intro">Introduction</button>
+            <button class="tab" data-tab="lab">Strategy Lab</button>
+            <button class="tab" data-tab="library">Proof Library</button>
+        </div>
+
+        <div id="intro" class="tab-content active">
+            <h2>Welcome to Proof Strategies!</h2>
+            <div class="intro-box">
+                <p>This tool helps you learn two powerful proof techniques. The key to advanced mathematics is not just knowing how to solve a problem, but choosing the best strategy to begin.</p>
+            </div>
+            <h3>Strategy 1: Proof by Cases (Ruling out Alternatives)</h3>
+            <p>Sometimes, we prove a statement by showing that all other possibilities are false. For example, to prove an integer must be divisible by 3, we can prove that its remainder cannot be 1 and cannot be 2. By ruling out all other cases, we prove the only remaining possibility must be true.</p>
+
+            <h3 style="margin-top: 1.5rem;">A Special Case: Proof by Contradiction</h3>
+            <p>Proof by Contradiction is the most powerful version of this strategy. There are only two cases for any statement: it is either true or false. We assume the statement is false (this is called the **alternative**). We then show this assumption leads to a logical impossibility (a **contradiction**). If the "false" case is impossible, the "true" case is the only one left.
+            </p>
+
+            <h3 style="margin-top: 1.5rem;">Types of Mathematical Statements</h3>
+            <p>In the Strategy Lab, you will learn how to approach proofs for different types of statements:</p>
+            <ul>
+                <li><strong>Bare Statement (P):</strong> A direct claim of fact. (e.g., "$\sqrt{2}$ is irrational.")</li>
+                <li><strong>Implication (A ⇒ B):</strong> A conditional "if-then" claim. (e.g., "If $n$ is even, then $n^2$ is even.")</li>
+                <li><strong>Universal Claim (∀x P(x)):</strong> A claim that a property P(x) is true for all elements $x$ in a set. (e.g., "For all integers $n$, $n^2+n$ is even.")</li>
+            </ul>
+        </div>
+
+        <div id="lab" class="tab-content">
+            <div class="lab-section">
+                <h3>Generate a Problem</h3>
+                <div class="control-group">
+                    <label for="statementTypeSelect">Choose a Statement Type</label>
+                    <select id="statementTypeSelect">
+                        <option value="Implication">Implication (A ⇒ B)</option>
+                        <option value="BareStatement">Bare Statement (P)</option>
+                        <option value="UniversalClaim">Universal Claim (∀x P(x))</option>
+                    </select>
+                </div>
+                <div class="control-group" style="margin-top: 1rem;">
+                    <button id="generateBtn">🤖 Generate Problem</button>
+                </div>
+            </div>
+             <div class="lab-section">
+                <h3>Or, Submit Your Own Theorem</h3>
+                <div class="control-group">
+                    <label for="userStatementInput">Enter a statement to prove:</label>
+                    <textarea id="userStatementInput" placeholder="e.g., The square root of 2 is irrational."></textarea>
+                </div>
+                 <div class="control-group" style="margin-top: 1rem;">
+                    <button id="analyzeBtn">🧠 Analyze My Statement</button>
+                </div>
+            </div>
+
+            <div id="lab-interactive-area" style="display: none;">
+                <div id="problem-display"></div>
+                <div id="strategy-choice"></div>
+                <div id="feedback-display" style="display: none;"></div>
+                <div id="sorter-container">
+                    <div class="sorter-column">
+                        <h3>Scrambled Steps</h3>
+                        <div id="scrambled-steps" class="drop-zone"></div>
+                    </div>
+                     <div class="sorter-column">
+                        <h3>Your Proof</h3>
+                        <div id="your-proof" class="drop-zone"></div>
+                    </div>
+                </div>
+                 <div class="control-group" style="margin-top: 1.5rem; text-align: center;">
+                    <button id="checkProofBtn" style="display: none; max-width: 250px; margin: auto;">Check My Proof</button>
+                </div>
+                <div id="success-message" style="text-align: center; color: var(--success-color); font-weight: bold; margin-top: 1rem;"></div>
+            </div>
+        </div>
+        
+        <div id="library" class="tab-content">
+             <div class="intro-box">
+                <p>Successfully completed proofs from the Strategy Lab will be added here for your review.</p>
+            </div>
+            <div id="library-content">
+                <p>Your library is currently empty.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+// --- STATE MANAGEMENT ---
+let state = { currentProblem: null, draggedCardId: null, completedProofs: new Set() };
+
+// --- DOM ELEMENTS ---
+const labInteractiveArea = document.getElementById('lab-interactive-area');
+const problemDisplay = document.getElementById('problem-display');
+const strategyChoice = document.getElementById('strategy-choice');
+const feedbackDisplay = document.getElementById('feedback-display');
+const sorterContainer = document.getElementById('sorter-container');
+const scrambledSteps = document.getElementById('scrambled-steps');
+const yourProof = document.getElementById('your-proof');
+const checkProofBtn = document.getElementById('checkProofBtn');
+const successMessage = document.getElementById('success-message');
+const libraryContent = document.getElementById('library-content');
+
+// --- TAB SWITCHING LOGIC ---
+document.querySelector('.tabs').addEventListener('click', e => {
+    if (e.target.matches('.tab')) {
+        const tabId = e.target.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+    }
+});
+
+// --- TYPESETTING ---
+function typeset(elements) {
+    if (window.MathJax?.startup?.promise) {
+        window.MathJax.startup.promise.then(() => {
+            window.MathJax.typesetPromise(elements).catch((err) => console.log('MathJax Typeset Error: ' + err.message));
+        });
+    }
+}
+
+// --- DRAG AND DROP LOGIC ---
+document.addEventListener('dragstart', e => {
+    if (e.target.classList.contains('proof-card')) {
+        state.draggedCardId = e.target.id;
+        setTimeout(() => e.target.style.opacity = '0.5', 0);
+    }
+});
+document.addEventListener('dragend', e => {
+    if (e.target.classList.contains('proof-card')) {
+         e.target.style.opacity = '1';
+    }
+});
+document.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const draggedElement = document.getElementById(state.draggedCardId);
+        if (draggedElement && !zone.contains(draggedElement)) {
+            zone.appendChild(draggedElement);
+        }
+        state.draggedCardId = null;
+    });
+});
+
+
+// --- AI & LAB LOGIC ---
+async function callAI(prompt) {
+    const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`API request failed with status: ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.error) {
+         throw new Error(`API returned an error: ${data.error}`);
+    }
+    return JSON.parse(data.candidates[0].content.parts[0].text);
+}
+
+document.getElementById('generateBtn').addEventListener('click', async () => {
+    const type = document.getElementById('statementTypeSelect').value;
+    const displayType = document.querySelector('#statementTypeSelect option:checked').textContent;
+
+    labInteractiveArea.style.display = 'block';
+    problemDisplay.innerHTML = `<p>🤖 Generating a problem of type "${displayType}"...</p>`;
+    feedbackDisplay.style.display = 'none';
+    sorterContainer.style.display = 'none';
+    
+    const prompt = `
+      You are a mathematics professor. Generate a theorem that is an '${displayType}'. 
+      The theorem should be from elementary number theory, real analysis, or set theory. 
+      Respond ONLY with a single JSON object with the following structure:
+      {
+        "id": "ai-generated-${Date.now()}",
+        "theorem": "The theorem text, using LaTeX for math.",
+        "alternative": "The logical negation of the theorem.",
+        "preferred_method": "direct" or "indirect",
+        "steps_direct": [ an array of strings for the direct proof cards, if that path is viable ],
+        "steps_indirect": [ an array of strings for the indirect proof cards, if that path is viable ]
+      }
+      If a proof method is not viable, its steps array MUST be empty or null. Provide steps for the preferred method.
+    `;
+
+    try {
+        const problemData = await callAI(prompt);
+        setupProblem(problemData);
+    } catch (error) {
+        problemDisplay.innerHTML = '<p style="color:red;">Sorry, there was an error generating a problem. Please try again.</p>';
+        console.error("AI Generation Error:", error);
+    }
+});
+
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+    const userInput = document.getElementById('userStatementInput').value;
+    if (!userInput.trim()) {
+        alert("Please enter a statement to analyze.");
+        return;
+    }
+
+    labInteractiveArea.style.display = 'block';
+    problemDisplay.innerHTML = `<p>🧠 Analyzing your statement... please wait.</p>`;
+    feedbackDisplay.style.display = 'none';
+    sorterContainer.style.display = 'none';
+
+    const prompt = `
+      You are a mathematics professor and proof assistant. A user has submitted the following theorem: "${userInput}".
+      Your task is to analyze it and prepare it for our 'Proof Sorter' interactive tool.
+      Respond ONLY with a single JSON object with the following structure:
+      {
+        "id": "user-submitted-${Date.now()}",
+        "theorem": "A neatly formatted LaTeX version of the user's statement.",
+        "alternative": "The logical negation of the statement.",
+        "preferred_method": "direct" or "indirect",
+        "steps_direct": [ an array of strings representing the key logical steps for a direct proof. This MUST be empty or null if a direct proof is not the preferred or viable method. ],
+        "steps_indirect": [ an array of strings representing the key logical steps for an indirect proof. This MUST be empty or null if an indirect proof is not the preferred or viable method. ]
+      }
+    `;
+
+    try {
+        const problemData = await callAI(prompt);
+        setupProblem(problemData);
+    } catch (error) {
+        problemDisplay.innerHTML = '<p style="color:red;">Sorry, there was an error analyzing your statement. It may be too complex or not a provable theorem.</p>';
+        console.error("AI Analysis Error:", error);
+    }
+});
+
+
+function setupProblem(problem) {
+    state.currentProblem = problem;
+    checkProofBtn.style.display = 'none';
+    successMessage.textContent = '';
+    scrambledSteps.innerHTML = '';
+    yourProof.innerHTML = '';
+    
+    problemDisplay.innerHTML = `
+        <h3>Theorem to Prove:</h3>
+        <p>${state.currentProblem.theorem}</p>
+        <h3 style="margin-top: 1rem;">The Alternative (Negation):</h3>
+        <p><em>${state.currentProblem.alternative}</em></p>
+    `;
+    strategyChoice.innerHTML = `
+        <p style="text-align:center; font-weight:bold;">Which path provides a better starting point?</p>
+        <button class="strategy-btn" data-choice="direct">Work with Original Statement (Direct)</button>
+        <button class="strategy-btn" data-choice="indirect">Work with Alternative (Contradiction)</button>
+    `;
+    
+    strategyChoice.style.display = 'flex';
+    document.querySelectorAll('.strategy-btn').forEach(btn => btn.addEventListener('click', handleStrategyChoice));
+    typeset([problemDisplay]);
+}
+
+
+function handleStrategyChoice(e) {
+    const choice = e.target.dataset.choice;
+    const problem = state.currentProblem;
+    
+    if (choice === problem.preferred_method) {
+        const justification = choice === 'direct' 
+            ? "Good choice. A direct proof works well here because we can use the given assumptions to build a straightforward logical chain."
+            : "Excellent choice. Assuming the alternative gives us a concrete statement to work with, which is often easier than proving a negative directly.";
+        
+        feedbackDisplay.innerHTML = `<p><span class="feedback-title">Strategy:</span> ${justification}</p>`;
+        populateSorter(choice === 'direct' ? problem.steps_direct : problem.steps_indirect);
+    } else {
+        const justification = choice === 'direct'
+            ? "That's a tough path. A direct proof is difficult here because the statement doesn't give us a concrete algebraic property to start with."
+            : "That's an interesting approach! While a proof by contradiction might be possible, you may find a direct proof is more straightforward for this particular theorem.";
+        
+        const otherChoice = problem.preferred_method;
+        const otherChoiceName = otherChoice === 'direct' ? 'Direct' : 'Indirect / Contradiction';
+
+        feedbackDisplay.innerHTML = `
+            <p><span class="feedback-title">Analysis:</span> ${justification}</p>
+            <p style="margin-top:0.5rem;">This is a classic case where the other path is more powerful. Would you like to switch?</p>
+            <div class="control-group" style="margin-top: 1rem; align-items: center;">
+               <button id="switchBtn" class="strategy-btn" data-choice="${otherChoice}">Switch to ${otherChoiceName} Proof</button>
+            </div>
+        `;
+        document.getElementById('switchBtn').addEventListener('click', handleStrategyChoice);
+    }
+
+    feedbackDisplay.style.display = 'block';
+    strategyChoice.style.display = 'none';
+    typeset([feedbackDisplay]);
+}
+
+function populateSorter(steps) {
+    if (!steps || steps.length === 0) {
+        feedbackDisplay.innerHTML += `<p style="margin-top:1rem; color: var(--error-color);">The AI was unable to generate steps for this path.</p>`;
+        return;
+    };
+    sorterContainer.style.display = 'grid';
+    checkProofBtn.style.display = 'inline-block';
+    scrambledSteps.innerHTML = '';
+    
+    const shuffledSteps = [...steps].sort(() => Math.random() - 0.5);
+    shuffledSteps.forEach((stepText, index) => {
+        const card = document.createElement('div');
+        card.id = `step-${index}`;
+        card.className = 'proof-card';
+        card.draggable = true;
+        card.innerHTML = stepText;
+        scrambledSteps.appendChild(card);
+    });
+    typeset([scrambledSteps]);
+}
+
+
+checkProofBtn.addEventListener('click', () => {
+    const userOrderCards = Array.from(yourProof.children);
+    const userOrder = userOrderCards.map(card => card.innerHTML);
+    if(userOrder.length === 0) return;
+
+    const firstCardText = userOrder[0];
+    const isDirectAttempt = state.currentProblem.steps_direct?.includes(firstCardText);
+    const correctSteps = isDirectAttempt ? state.currentProblem.steps_direct : state.currentProblem.steps_indirect;
+    
+    document.querySelectorAll('.card-error').forEach(c => c.classList.remove('card-error'));
+    document.querySelectorAll('.hint-text').forEach(h => h.remove());
+    successMessage.textContent = '';
+
+    let isCorrect = true;
+    for (let i = 0; i < correctSteps.length; i++) {
+        if (i >= userOrder.length || userOrder[i] !== correctSteps[i]) {
+            isCorrect = false;
+            if (userOrderCards[i]) {
+                const errorCard = userOrderCards[i];
+                errorCard.classList.add('card-error');
+                const hint = document.createElement('div');
+                hint.className = 'hint-text';
+                hint.textContent = "This step seems out of place. Think about what needs to happen before this.";
+                errorCard.insertAdjacentElement('afterend', hint);
+            }
+            break;
+        }
+    }
+
+    if (isCorrect && userOrder.length === correctSteps.length) {
+        successMessage.textContent = '🎉 Excellent! The logical flow of your proof is perfect.';
+        addToLibrary();
+        checkProofBtn.style.display = 'none';
+    } else if (isCorrect && userOrder.length < correctSteps.length) {
+         const lastCorrectCard = userOrder.length > 0 ? userOrderCards[userOrder.length - 1] : null;
+         const hint = document.createElement('div');
+         hint.className = 'hint-text';
+         hint.textContent = "You're on the right track, but the proof isn't complete yet.";
+         if (lastCorrectCard) {
+            lastCorrectCard.insertAdjacentElement('afterend', hint);
+         } else {
+             yourProof.innerHTML += `<div class="hint-text">${hint.textContent}</div>`;
+         }
+    }
+});
+
+function addToLibrary() {
+    if (state.completedProofs.has(state.currentProblem.id)) return;
+    state.completedProofs.add(state.currentProblem.id);
+    if(libraryContent.querySelector('p')?.textContent.includes('empty')) {
+        libraryContent.innerHTML = '';
+    }
+    const listing = document.createElement('div');
+    listing.className = 'proof-listing';
+    const steps = Array.from(yourProof.children).map(card => `<li>${card.innerHTML}</li>`).join('');
+    listing.innerHTML = `<h3>${state.currentProblem.theorem}</h3><ol>${steps}</ol>`;
+    libraryContent.appendChild(listing);
+    typeset([listing]);
+}
+
+</script>
+</body>
+</html>
