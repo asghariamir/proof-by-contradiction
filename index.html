@@ -781,6 +781,18 @@
                         <button id="check-alternative" onclick="checkAlternative()" disabled>Check Answer</button>
                     </div>
                     <div id="alternative-feedback" class="feedback-display" style="display: none;"></div>
+                    
+                    <!-- Challenge AI Section -->
+                    <div id="challenge-ai-section" style="display: none; margin-top: 1rem;">
+                        <button class="control-btn" onclick="showChallengeForm()" style="background: var(--accent-amber); color: white; border: 2px solid var(--accent-amber);">
+                            🤔 Challenge AI / Suggest Better Wording
+                        </button>
+                        <div id="challenge-form" class="alternative-input" style="display: none; margin-top: 1rem;">
+                            <textarea id="challenge-reasoning" rows="3" placeholder="Explain why your alternative is correct, or suggest better wording for the statement..."></textarea>
+                            <button onclick="submitChallenge()">Submit Challenge</button>
+                        </div>
+                        <div id="challenge-result" class="feedback-display" style="display: none;"></div>
+                    </div>
                 </div>
 
                 <div class="nav-buttons">
@@ -1041,6 +1053,7 @@
                     The alternative is: "${problem.alternative}"<br>
                     This gives you something concrete to work with for contradiction.
                 `;
+                document.getElementById('challenge-ai-section').style.display = 'none';
             } else {
                 feedbackDiv.className = 'feedback-display error';
                 feedbackDiv.innerHTML = `
@@ -1048,11 +1061,64 @@
                     The alternative should be: "${problem.alternative}"<br>
                     Remember: you need the logical negation of the original statement.
                 `;
+                document.getElementById('challenge-ai-section').style.display = 'block';
             }
             
             // Typeset math if available
             if (window.MathJax && window.MathJax.typesetPromise) {
                 window.MathJax.typesetPromise([feedbackDiv]);
+            }
+        }
+
+        function showChallengeForm() {
+            document.getElementById('challenge-form').style.display = 'block';
+            document.getElementById('challenge-result').style.display = 'none';
+        }
+
+        async function submitChallenge() {
+            const reasoning = document.getElementById('challenge-reasoning').value.trim();
+            if (!reasoning) {
+                alert('Please explain your reasoning or suggest better wording.');
+                return;
+            }
+
+            const resultDiv = document.getElementById('challenge-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'feedback-display info';
+            resultDiv.innerHTML = '<strong>Consulting AI...</strong>';
+
+            const problem = state.practiceProblems[state.currentStatementType];
+            const userInput = document.getElementById('alternative-input').value;
+
+            const prompt = `
+                A student is practicing identifying alternatives for proof by contradiction.
+                
+                Original statement: "${problem.statement}"
+                Expected alternative: "${problem.alternative}"
+                Student's alternative: "${userInput}"
+                Student's reasoning: "${reasoning}"
+                
+                Please evaluate:
+                1. Is the student's alternative logically equivalent to the expected one?
+                2. If the student suggests better wording for the original statement, is it valid?
+                3. Provide constructive feedback and suggest improvements if needed.
+                
+                Be encouraging but accurate. If they're right, acknowledge it. If not, explain why gently and suggest better approaches.
+            `;
+
+            try {
+                const aiResponse = await callAI(prompt, 1);
+                resultDiv.className = 'feedback-display info';
+                resultDiv.innerHTML = `<strong>AI Analysis:</strong><br>${aiResponse}`;
+                
+                // Typeset math if available
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([resultDiv]);
+                }
+            } catch (error) {
+                console.error('AI challenge failed:', error);
+                resultDiv.className = 'feedback-display error';
+                resultDiv.innerHTML = '<strong>AI temporarily unavailable.</strong><br>Your reasoning has been noted. Try rephrasing your alternative or the original statement for better clarity.';
             }
         }
 
@@ -1148,6 +1214,13 @@
                 document.getElementById('user-alternative').value = '';
                 document.getElementById('alternative-result').style.display = 'none';
                 document.getElementById('proof-construction').style.display = 'none';
+                document.getElementById('alternative-identification').style.display = 'none';
+                document.getElementById('strategy-feedback').style.display = 'none';
+                
+                // Reset strategy buttons
+                document.querySelectorAll('.strategy-choice-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
                 
             } catch (error) {
                 console.error('AI generation failed:', error);
@@ -1253,16 +1326,22 @@
             resultDiv.style.display = 'block';
             
             // Simple similarity check - in real app, could use AI for validation
-            const similarity = userInput.toLowerCase().includes(correctAlternative.toLowerCase().split(' ')[0]) ||
-                              correctAlternative.toLowerCase().includes(userInput.toLowerCase().split(' ')[0]);
+            const userWords = userInput.toLowerCase().split(/\s+/);
+            const correctWords = correctAlternative.toLowerCase().split(/\s+/);
+            const commonWords = userWords.filter(word => 
+                word.length > 2 && correctWords.some(cw => cw.includes(word) || word.includes(cw))
+            );
             
-            if (similarity && userInput.length > 5) {
+            const similarity = commonWords.length >= Math.min(2, correctWords.length - 1);
+            
+            if (similarity && userInput.length > 8) {
                 resultDiv.className = 'feedback-display success';
                 resultDiv.innerHTML = `
-                    <strong>Great!</strong> Your alternative is correct.<br>
+                    <strong>Great!</strong> Your alternative is on the right track.<br>
                     Expected: "${correctAlternative}"<br>
-                    Now let's build the proof!
+                    Now let's build the proof step by step!
                 `;
+                document.getElementById('construction-title').textContent = 'Step 3: Construct the Proof by Contradiction';
                 document.getElementById('proof-construction').style.display = 'block';
                 populateProofSteps();
             } else {
@@ -1270,9 +1349,31 @@
                 resultDiv.innerHTML = `
                     <strong>Not quite.</strong><br>
                     The correct alternative is: "${correctAlternative}"<br>
-                    Try to think about the logical negation of the statement.
+                    Think about the logical negation of the original statement.
+                    <br><br>
+                    <button onclick="acceptCorrectAlternative()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Continue with Correct Alternative
+                    </button>
                 `;
             }
+            
+            // Typeset math
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([resultDiv]);
+            }
+        }
+
+        function acceptCorrectAlternative() {
+            const resultDiv = document.getElementById('alternative-result');
+            resultDiv.className = 'feedback-display info';
+            resultDiv.innerHTML = `
+                <strong>Let's proceed.</strong><br>
+                Alternative: "${state.currentProblem.alternative}"<br>
+                Now you can build the proof step by step!
+            `;
+            document.getElementById('construction-title').textContent = 'Step 3: Construct the Proof by Contradiction';
+            document.getElementById('proof-construction').style.display = 'block';
+            populateProofSteps();
             
             // Typeset math
             if (window.MathJax && window.MathJax.typesetPromise) {
