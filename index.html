@@ -1249,6 +1249,12 @@
         }
 
         function chooseStrategy(strategy) {
+            // Check if we have a current problem
+            if (!state.currentProblem) {
+                alert('Please generate a problem first!');
+                return;
+            }
+            
             // Update button selection
             document.querySelectorAll('.strategy-choice-btn').forEach(btn => {
                 btn.classList.remove('selected');
@@ -1272,6 +1278,7 @@
                     // Go directly to proof construction for direct proofs
                     document.getElementById('construction-title').textContent = 'Step 2: Construct the Direct Proof';
                     document.getElementById('proof-construction').style.display = 'block';
+                    document.getElementById('alternative-identification').style.display = 'none';
                     populateProofSteps();
                 } else {
                     feedbackDiv.innerHTML = `
@@ -1281,6 +1288,7 @@
                     `;
                     // Show alternative identification step for indirect proofs
                     document.getElementById('alternative-identification').style.display = 'block';
+                    document.getElementById('proof-construction').style.display = 'none';
                 }
             } else {
                 feedbackDiv.className = 'feedback-display info';
@@ -1289,26 +1297,22 @@
                     feedbackDiv.innerHTML = `
                         <strong>That's a reasonable approach to consider.</strong><br>
                         While direct proof is possible for many statements, this particular one seems more challenging
-                        to approach directly. Would you like to try contradiction instead, which might offer a clearer path?
-                        <br><br>
-                        <button onclick="document.querySelector('[data-strategy=\\'indirect\\']').click()" 
-                                style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); 
-                                       color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            Try Contradiction Approach
-                        </button>
+                        to approach directly. Contradiction might offer a clearer path, but let's proceed with your choice.
                     `;
+                    // Still allow direct approach even if not preferred
+                    document.getElementById('construction-title').textContent = 'Step 2: Construct the Direct Proof';
+                    document.getElementById('proof-construction').style.display = 'block';
+                    document.getElementById('alternative-identification').style.display = 'none';
+                    populateProofSteps();
                 } else {
                     feedbackDiv.innerHTML = `
                         <strong>Interesting choice!</strong><br>
                         Proof by contradiction could work, but this statement seems well-suited for a direct approach.
-                        The assumptions give you clear starting points to work forward. 
-                        <br><br>
-                        <button onclick="document.querySelector('[data-strategy=\\'direct\\']').click()" 
-                                style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); 
-                                       color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            Try Direct Approach
-                        </button>
+                        The assumptions give you clear starting points. Let's see how contradiction works out.
                     `;
+                    // Still allow indirect approach even if not preferred
+                    document.getElementById('alternative-identification').style.display = 'block';
+                    document.getElementById('proof-construction').style.display = 'none';
                 }
             }
             
