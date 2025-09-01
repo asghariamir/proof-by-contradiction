@@ -794,7 +794,10 @@
             <div class="intro-section">
                 <div class="concept-explanation">
                     <h3>Interactive Proof Builder</h3>
-                    <p>Generate dynamic proof problems with AI assistance. First identify the alternative, then construct the full proof through drag-and-drop.</p>
+                    <p>Generate dynamic proof problems with AI assistance. First choose your strategic approach, then construct the full proof through drag-and-drop.</p>
+                    <p style="font-size: 0.9rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; opacity: 0.9;">
+                        <strong>Please note:</strong> The AI helper can make mistakes and may be temporarily unavailable during periods of high traffic.
+                    </p>
                 </div>
 
                 <div class="builder-controls">
@@ -825,7 +828,21 @@
                     <div class="theorem-statement" id="theorem-display"></div>
                     
                     <div class="alternative-step">
-                        <h5>Step 1: Identify the Alternative</h5>
+                        <h5>Step 1: Choose Your Strategy</h5>
+                        <p>Which approach seems more promising for this statement?</p>
+                        <div class="strategy-choices" style="display: flex; gap: 1rem; justify-content: center; margin: 1rem 0;">
+                            <button class="strategy-choice-btn" data-strategy="direct" onclick="chooseStrategy('direct')">
+                                🎯 Direct Proof<br><small>Work forward from assumptions</small>
+                            </button>
+                            <button class="strategy-choice-btn" data-strategy="indirect" onclick="chooseStrategy('indirect')">
+                                🔄 Proof by Contradiction<br><small>Assume the opposite</small>
+                            </button>
+                        </div>
+                        <div id="strategy-feedback" class="feedback-display" style="display: none;"></div>
+                    </div>
+
+                    <div class="alternative-step" id="alternative-identification" style="display: none;">
+                        <h5>Step 2: Identify the Alternative</h5>
                         <p>What would you assume for proof by contradiction?</p>
                         <div class="alternative-input">
                             <input type="text" id="user-alternative" placeholder="Enter your alternative assumption">
@@ -835,7 +852,7 @@
                     </div>
 
                     <div id="proof-construction" style="display: none;">
-                        <h5>Step 2: Construct the Proof</h5>
+                        <h5 id="construction-title">Step 3: Construct the Proof</h5>
                         <div class="controls">
                             <button class="control-btn" id="show-hint" onclick="showHint()">💡 Show Hint</button>
                             <button class="control-btn" id="check-proof" onclick="checkProof()">✅ Check Proof</button>
@@ -898,6 +915,7 @@
             'bare-number-theory': {
                 statement: "√3 is irrational",
                 alternative: "√3 is rational",
+                preferredStrategy: "indirect",
                 hint: "Assume √3 = a/b in lowest terms, then derive that both a and b must be divisible by 3.",
                 steps: [
                     "Assume √3 is rational, so √3 = a/b where gcd(a,b) = 1",
@@ -914,6 +932,7 @@
             'implication-geometry': {
                 statement: "If a triangle has two equal sides, then it has two equal angles",
                 alternative: "A triangle has two equal sides but all angles are different",
+                preferredStrategy: "direct",
                 hint: "Use the fact that equal sides subtend equal angles.",
                 steps: [
                     "Let triangle ABC have AB = AC",
@@ -929,6 +948,7 @@
             'universal-algebra': {
                 statement: "For all integers n, n² + n + 1 is odd",
                 alternative: "There exists an integer n such that n² + n + 1 is even",
+                preferredStrategy: "direct",
                 hint: "Factor as n(n+1) + 1 and note that n(n+1) is always even.",
                 steps: [
                     "Let n be any integer",
@@ -1150,6 +1170,76 @@
             // Typeset math
             if (window.MathJax && window.MathJax.typesetPromise) {
                 window.MathJax.typesetPromise([document.getElementById('theorem-display')]);
+            }
+        }
+
+        function chooseStrategy(strategy) {
+            // Update button selection
+            document.querySelectorAll('.strategy-choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-strategy="${strategy}"]`).classList.add('selected');
+            
+            const feedbackDiv = document.getElementById('strategy-feedback');
+            const preferredStrategy = state.currentProblem.preferredStrategy;
+            
+            feedbackDiv.style.display = 'block';
+            
+            if (strategy === preferredStrategy) {
+                feedbackDiv.className = 'feedback-display success';
+                
+                if (strategy === 'direct') {
+                    feedbackDiv.innerHTML = `
+                        <strong>Good strategic thinking!</strong><br>
+                        A direct approach seems most promising here. You have clear assumptions to work with 
+                        and can build a straightforward logical path to the conclusion.
+                    `;
+                    // Go directly to proof construction for direct proofs
+                    document.getElementById('construction-title').textContent = 'Step 2: Construct the Direct Proof';
+                    document.getElementById('proof-construction').style.display = 'block';
+                    populateProofSteps();
+                } else {
+                    feedbackDiv.innerHTML = `
+                        <strong>Excellent choice!</strong><br>
+                        Proof by contradiction appears more promising here. A direct approach would be quite challenging,
+                        but assuming the opposite gives you concrete properties to work with.
+                    `;
+                    // Show alternative identification step for indirect proofs
+                    document.getElementById('alternative-identification').style.display = 'block';
+                }
+            } else {
+                feedbackDiv.className = 'feedback-display info';
+                
+                if (strategy === 'direct') {
+                    feedbackDiv.innerHTML = `
+                        <strong>That's a reasonable approach to consider.</strong><br>
+                        While direct proof is possible for many statements, this particular one seems more challenging
+                        to approach directly. Would you like to try contradiction instead, which might offer a clearer path?
+                        <br><br>
+                        <button onclick="document.querySelector('[data-strategy=\\'indirect\\']').click()" 
+                                style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); 
+                                       color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            Try Contradiction Approach
+                        </button>
+                    `;
+                } else {
+                    feedbackDiv.innerHTML = `
+                        <strong>Interesting choice!</strong><br>
+                        Proof by contradiction could work, but this statement seems well-suited for a direct approach.
+                        The assumptions give you clear starting points to work forward. 
+                        <br><br>
+                        <button onclick="document.querySelector('[data-strategy=\\'direct\\']').click()" 
+                                style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); 
+                                       color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            Try Direct Approach
+                        </button>
+                    `;
+                }
+            }
+            
+            // Typeset math if available
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([feedbackDiv]);
             }
         }
 
