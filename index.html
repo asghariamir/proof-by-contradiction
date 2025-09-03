@@ -868,6 +868,55 @@
             border-left: 3px solid var(--accent-amber);
             animation: fadeIn 0.5s ease;
         }
+
+        /* Attempt Counter */
+        .attempt-counter {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Show Answer Button */
+        .show-answer-btn {
+            background: transparent !important;
+            color: var(--primary-color) !important;
+            border: 1px solid var(--primary-color) !important;
+            font-size: 0.9rem !important;
+            padding: 0.6rem 1.2rem !important;
+            margin-left: 0.5rem;
+        }
+
+        .show-answer-btn:hover:not(:disabled) {
+            background: var(--interactive-bg) !important;
+        }
+
+        /* Improved Feedback Sections */
+        .feedback-section {
+            margin-bottom: 1rem;
+        }
+
+        .feedback-section strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .hint-progression {
+            background: rgba(245, 158, 11, 0.1);
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            border-left: 3px solid var(--accent-amber);
+        }
+
+        .correct-answer-reveal {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 0.8rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            border: 2px solid var(--success-color);
+        }
     </style>
 </head>
 <body>
@@ -1032,6 +1081,7 @@
                             <option value="bare">Bare Statement</option>
                             <option value="implication">Implication</option>
                             <option value="universal">Universal Statement</option>
+                            <option value="existence">Existence Statement</option>
                         </select>
                     </div>
                     <div class="control-group">
@@ -1115,6 +1165,10 @@
             selectedStrategy: null,
             draggedElement: null,
             originalStepsOrder: [],
+            attemptCounts: {
+                alternatives: {},
+                builder: 0
+            },
             practiceProblems: {
                 bare: {
                     statement: "√2 is irrational",
@@ -1202,6 +1256,7 @@
             element.classList.add('active');
             
             state.currentStatementType = type;
+            state.attemptCounts.alternatives[type] = 0;
             const problem = state.practiceProblems[type];
             
             document.getElementById('practice-statement').innerHTML = `
@@ -1230,6 +1285,11 @@
             
             const feedbackDiv = document.getElementById('alternative-feedback');
             feedbackDiv.style.display = 'block';
+            
+            state.attemptCounts.alternatives[state.currentStatementType] = 
+                (state.attemptCounts.alternatives[state.currentStatementType] || 0) + 1;
+            
+            const attemptCount = state.attemptCounts.alternatives[state.currentStatementType];
             
             // More flexible checking
             let isCorrect = false;
@@ -1279,7 +1339,7 @@
                 }
             }
             
-            // Display appropriate feedback
+            // Display appropriate feedback with attempt tracking
             if (isCorrect) {
                 feedbackDiv.className = 'feedback-display success';
                 feedbackDiv.innerHTML = `
@@ -1289,15 +1349,60 @@
                 `;
             } else if (isPartiallyCorrect) {
                 feedbackDiv.className = 'feedback-display info';
-                feedbackDiv.innerHTML = `
-                    <strong>You're getting closer!</strong><br>
-                    ${feedback}<br>
-                    <small>The complete alternative is: "${problem.alternative}"</small>
+                let html = `
+                    <div class="feedback-section">
+                        <strong>You're getting closer!</strong>
+                        ${feedback}
+                    </div>
                 `;
+                
+                if (attemptCount >= 2) {
+                    html += `
+                        <div class="hint-progression">
+                            <strong>Hint:</strong> The complete alternative is: "${problem.alternative}"
+                            <div class="attempt-counter">Attempts: ${attemptCount}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
+                }
+                
+                feedbackDiv.innerHTML = html;
             } else {
                 feedbackDiv.className = 'feedback-display info';
-                feedbackDiv.innerHTML = getHelpfulHint(state.currentStatementType, problem);
+                let html = getHelpfulHint(state.currentStatementType, problem);
+                
+                if (attemptCount >= 3) {
+                    html += `
+                        <button class="show-answer-btn" onclick="showAlternativeAnswer()">Show Answer</button>
+                        <div class="attempt-counter">Attempts: ${attemptCount}</div>
+                    `;
+                } else {
+                    html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
+                }
+                
+                feedbackDiv.innerHTML = html;
             }
+            
+            // Typeset math if available
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([feedbackDiv]);
+            }
+        }
+
+        function showAlternativeAnswer() {
+            const problem = state.practiceProblems[state.currentStatementType];
+            const feedbackDiv = document.getElementById('alternative-feedback');
+            
+            feedbackDiv.className = 'feedback-display success';
+            feedbackDiv.innerHTML = `
+                <div class="correct-answer-reveal">
+                    <strong>The correct alternative is:</strong><br>
+                    "${problem.alternative}"<br><br>
+                    Understanding this negation is crucial for proof by contradiction. 
+                    Try another statement type to practice more!
+                </div>
+            `;
             
             // Typeset math if available
             if (window.MathJax && window.MathJax.typesetPromise) {
@@ -1351,32 +1456,45 @@
                     'existence': 'an existence statement (there exists x such that P(x))'
                 };
                 
-                const prompt = `You are helping a student learn mathematical proof strategies, specifically about identifying the correct negation for proof by contradiction.
+                const prompt = `You are a supportive mathematics tutor helping a student learn proof by contradiction. The student is working on identifying negations.
 
 Statement type: ${typeExplanations[state.currentStatementType]}
 Original statement: "${problem.statement}"
-Student's proposed alternative: "${userInput}"
-Correct alternative: "${problem.alternative}"
+Student's proposed negation: "${userInput}"
+Correct negation: "${problem.alternative}"
 
-Analyze the student's answer and provide educational feedback. Your response should:
+Provide guided feedback following these rules:
+1. If completely correct: Celebrate and reinforce their understanding
+2. If partially correct: Identify what they got right, then give a specific hint about what's missing WITHOUT revealing the answer
+3. If incorrect: Give an encouraging hint that guides them toward the logical structure WITHOUT giving away the answer
 
-1. First, acknowledge what the student got right (if anything)
-2. Identify what's missing or incorrect (be specific but kind)
-3. Explain the logical structure behind the negation for this statement type
-4. Guide them toward the complete correct answer
-5. End with encouragement
+Use LaTeX notation with $ for inline math where appropriate.
+Be encouraging and specific. Focus on helping them discover the answer themselves.
+Keep response to 2-3 sentences maximum.
 
-Be conversational, educational, and supportive. Focus on helping them understand the underlying logic, not just memorizing the right answer.
-
-If their answer is completely correct, celebrate that! If it's partially correct, build on what they understand. If it's incorrect, guide them step by step.
-
-Keep your response concise (2-3 sentences maximum) but helpful.`;
+Important: Do NOT directly state the correct answer unless the student already got it right.`;
 
                 const response = await callAI(prompt);
                 
                 feedbackDiv.style.display = 'block';
                 feedbackDiv.className = 'feedback-display info';
-                feedbackDiv.innerHTML = `<strong>AI Feedback:</strong><br>${response}`;
+                
+                // Process the response to ensure LaTeX rendering
+                const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
+                    return `$${p1}$`;
+                });
+                
+                feedbackDiv.innerHTML = `
+                    <div class="feedback-section">
+                        <strong>AI Feedback:</strong><br>
+                        ${processedResponse}
+                    </div>
+                `;
+                
+                // Typeset math in the feedback
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([feedbackDiv]);
+                }
                 
             } catch (error) {
                 console.error('AI challenge failed:', error);
@@ -1390,11 +1508,6 @@ Keep your response concise (2-3 sentences maximum) but helpful.`;
             
             challengeBtn.disabled = false;
             challengeBtn.textContent = 'Challenge AI';
-            
-            // Typeset math if available
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedbackDiv]);
-            }
         }
 
         // AI API integration
@@ -1503,6 +1616,9 @@ Keep your response concise (2-3 sentences maximum) but helpful.`;
             btn.disabled = true;
             btn.textContent = 'Generating...';
             
+            // Reset attempt counter for builder
+            state.attemptCounts.builder = 0;
+            
             // Build the key from user's selection
             const key = `${type}-${area}`;
             
@@ -1511,7 +1627,8 @@ Keep your response concise (2-3 sentences maximum) but helpful.`;
                 const typeDescriptions = {
                     'bare': 'a simple statement P (like "√2 is irrational")',
                     'implication': 'an if-then statement P→Q (like "if n is even, then n² is even")',
-                    'universal': 'a universal statement ∀x P(x) (like "for all integers n, n² ≥ 0")'
+                    'universal': 'a universal statement ∀x P(x) (like "for all integers n, n² ≥ 0")',
+                    'existence': 'an existence statement ∃x P(x) (like "there exists a prime between 10 and 20")'
                 };
                 
                 const areaDescriptions = {
@@ -1628,6 +1745,7 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
             document.getElementById('proof-feedback').style.display = 'none';
             
             state.selectedStrategy = null;
+            state.attemptCounts.builder = 0;
         }
 
         function selectBuilderStrategy(strategy) {
@@ -1656,6 +1774,7 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
                 document.getElementById('alternative-section').classList.add('active');
                 document.getElementById('builder-alternative-input').value = '';
                 document.getElementById('builder-alternative-feedback').style.display = 'none';
+                state.attemptCounts.builder = 0; // Reset attempts for new section
             } else {
                 document.getElementById('alternative-section').classList.remove('active');
                 buildProofStructure();
@@ -1665,6 +1784,8 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
         function checkBuilderAlternative() {
             const input = document.getElementById('builder-alternative-input').value.trim();
             const feedback = document.getElementById('builder-alternative-feedback');
+            
+            state.attemptCounts.builder++;
             
             if (!input) {
                 feedback.style.display = 'flex';
@@ -1684,26 +1805,75 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
             let isPartial = false;
             let hint = '';
             
-            if (inputLower.includes('rational') && correctLower.includes('rational')) {
+            // Simple keyword matching for common patterns
+            const keyWords = correctLower.split(' ').filter(word => word.length > 3);
+            const matchCount = keyWords.filter(word => inputLower.includes(word)).length;
+            const matchRatio = matchCount / keyWords.length;
+            
+            if (matchRatio > 0.7) {
                 isCorrect = true;
-            } else if (inputLower.includes('assume') && (inputLower.includes('rational') || inputLower.includes('finite'))) {
+            } else if (matchRatio > 0.4) {
                 isPartial = true;
-                hint = "You have the right idea about assuming the opposite! Try to be more precise.";
+                hint = "You have the right idea! Try to be more precise about the exact negation.";
             } else {
-                hint = "Remember: for proof by contradiction, you assume the negation of what you want to prove.";
+                hint = "Remember: for proof by contradiction, you assume the exact opposite of what you want to prove.";
             }
             
             if (isCorrect) {
                 feedback.className = 'feedback-display success';
-                feedback.innerHTML = `<strong>Correct!</strong><br>Yes, we assume: "${state.currentProblem.alternative}"`;
+                feedback.innerHTML = `
+                    <strong>Correct!</strong><br>
+                    Yes, we assume: "${state.currentProblem.alternative}"
+                `;
                 setTimeout(() => buildProofStructure(), 1500);
             } else if (isPartial) {
                 feedback.className = 'feedback-display info';
-                feedback.innerHTML = `<strong>Getting closer!</strong><br>${hint}<br><small>The complete alternative is: "${state.currentProblem.alternative}"</small>`;
+                let html = `
+                    <div class="feedback-section">
+                        <strong>Getting closer!</strong><br>
+                        ${hint}
+                    </div>
+                `;
+                
+                if (state.attemptCounts.builder >= 2) {
+                    html += `
+                        <div class="hint-progression">
+                            The correct alternative is: "${state.currentProblem.alternative}"
+                            <button class="show-answer-btn" onclick="proceedWithProof()">Continue →</button>
+                        </div>
+                    `;
+                }
+                
+                feedback.innerHTML = html;
             } else {
                 feedback.className = 'feedback-display info';
-                feedback.innerHTML = `<strong>Think about the logical negation:</strong><br>${hint}<br><small>The correct alternative is: "${state.currentProblem.alternative}"</small>`;
+                let html = `
+                    <div class="feedback-section">
+                        <strong>Think about the logical negation:</strong><br>
+                        ${hint}
+                    </div>
+                `;
+                
+                if (state.attemptCounts.builder >= 3) {
+                    html += `
+                        <div class="correct-answer-reveal">
+                            The correct alternative is: "${state.currentProblem.alternative}"
+                            <button class="show-answer-btn" onclick="proceedWithProof()">Continue with Proof →</button>
+                        </div>
+                    `;
+                }
+                
+                feedback.innerHTML = html;
             }
+            
+            // Typeset math
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([feedback]);
+            }
+        }
+
+        function proceedWithProof() {
+            buildProofStructure();
         }
 
         async function challengeAIBuilder() {
@@ -1721,35 +1891,70 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
             challengeBtn.disabled = true;
             challengeBtn.textContent = 'AI Analyzing...';
             
+            state.attemptCounts.builder++;
+            
             try {
-                const prompt = `You are helping a student learn proof by contradiction. They need to identify what to assume for contradiction.
+                const prompt = `You are a supportive mathematics tutor. The student is learning proof by contradiction and needs to identify what to assume.
 
 Original statement to prove: "${state.currentProblem.statement}"
 Student's proposed assumption: "${input}"
 Correct assumption for contradiction: "${state.currentProblem.alternative}"
 
-Analyze their answer and provide helpful feedback:
+Analyze their answer and provide guided feedback:
 
-1. Acknowledge what they got right (if anything)
-2. Explain what's missing or needs correction (be specific but supportive)
-3. Help them understand the logical structure of negation for this type of statement
-4. Guide them toward the complete answer
-5. Keep it encouraging and educational
+If completely correct: Celebrate their understanding!
+If partially correct (has key ideas but not complete): 
+- Acknowledge what they got right
+- Give ONE specific hint about what's missing WITHOUT revealing the answer
+- Offer them the option to try again
 
-Be conversational and focus on helping them learn the underlying logic. If they're completely right, celebrate! If partially right, build on their understanding. If incorrect, guide them step by step.
+If incorrect:
+- Give an encouraging hint about the logical structure
+- Guide them toward understanding WITHOUT giving the answer
+- After 2+ attempts, you may offer more specific guidance
 
-Limit your response to 2-3 sentences maximum.`;
+Use $ for LaTeX math notation where appropriate.
+Be encouraging and pedagogical. Help them learn, don't just give answers.
+Keep response to 2-3 sentences. End with a question if they should try again.`;
 
                 const response = await callAI(prompt);
                 
                 feedback.style.display = 'flex';
                 feedback.className = 'feedback-display info';
-                feedback.innerHTML = `<strong>AI Feedback:</strong><br>${response}`;
                 
-                // If the AI feedback suggests they understand the concept, allow progression
-                if (response.toLowerCase().includes('correct') || response.toLowerCase().includes('excellent') || 
-                    response.toLowerCase().includes('perfect')) {
+                // Process response for LaTeX
+                const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
+                    return `$${p1}$`;
+                });
+                
+                let html = `
+                    <div class="feedback-section">
+                        <strong>AI Feedback:</strong><br>
+                        ${processedResponse}
+                    </div>
+                `;
+                
+                // Check if response indicates success
+                const isSuccess = response.toLowerCase().includes('correct') || 
+                                response.toLowerCase().includes('excellent') || 
+                                response.toLowerCase().includes('perfect') ||
+                                response.toLowerCase().includes('exactly right');
+                
+                if (isSuccess) {
                     setTimeout(() => buildProofStructure(), 2000);
+                } else if (state.attemptCounts.builder >= 2) {
+                    html += `
+                        <div class="hint-progression">
+                            <button class="show-answer-btn" onclick="showBuilderAnswer()">Show Answer</button>
+                        </div>
+                    `;
+                }
+                
+                feedback.innerHTML = html;
+                
+                // Typeset math
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([feedback]);
                 }
                 
             } catch (error) {
@@ -1761,10 +1966,31 @@ Limit your response to 2-3 sentences maximum.`;
                     Remember: you need the logical negation of "${state.currentProblem.statement}"<br>
                     <small>The correct alternative is: "${state.currentProblem.alternative}"</small>
                 `;
+                
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([feedback]);
+                }
             }
             
             challengeBtn.disabled = false;
             challengeBtn.textContent = 'Challenge AI';
+        }
+
+        function showBuilderAnswer() {
+            const feedback = document.getElementById('builder-alternative-feedback');
+            feedback.className = 'feedback-display success';
+            feedback.innerHTML = `
+                <div class="correct-answer-reveal">
+                    <strong>The correct alternative is:</strong><br>
+                    "${state.currentProblem.alternative}"<br><br>
+                    Now let's construct the proof!
+                    <button class="nav-btn" onclick="buildProofStructure()">Continue →</button>
+                </div>
+            `;
+            
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([feedback]);
+            }
         }
 
         function buildProofStructure() {
@@ -1860,6 +2086,11 @@ Limit your response to 2-3 sentences maximum.`;
                 
                 area.appendChild(div);
             });
+            
+            // Typeset math in steps
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([area]);
+            }
         }
 
         // Drag and drop handlers
@@ -1926,7 +2157,7 @@ Limit your response to 2-3 sentences maximum.`;
                 showCompleteProof();
             } else {
                 feedback.className = 'feedback-display info';
-                feedback.innerHTML = 'Not quite right. Green steps are correctly placed.';
+                feedback.innerHTML = 'Not quite right. Green steps are correctly placed. Keep trying!';
             }
         }
 
@@ -1981,6 +2212,11 @@ Limit your response to 2-3 sentences maximum.`;
             feedback.style.display = 'flex';
             feedback.className = 'feedback-display info';
             feedback.innerHTML = `<strong>💡 Hint:</strong> ${state.currentProblem.hint}`;
+            
+            // Typeset math
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([feedback]);
+            }
         }
 
         // Initialize the app
