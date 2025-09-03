@@ -567,6 +567,45 @@
             background: #dc8e0a !important;
         }
 
+        /* Alternative Actions */
+        .alternative-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .alternative-actions button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .try-again-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .try-again-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .hint-btn {
+            background: transparent;
+            color: var(--accent-amber);
+            border: 2px solid var(--accent-amber) !important;
+        }
+
+        .hint-btn:hover {
+            background: rgba(245, 158, 11, 0.1);
+            transform: translateY(-2px);
+        }
+
         /* Proof Structure */
         .proof-construction {
             display: none;
@@ -1125,10 +1164,16 @@
                         <p>What would you assume for proof by contradiction?</p>
                         <div class="alternative-input-group">
                             <input type="text" id="builder-alternative-input" placeholder="Enter what you would assume...">
-                            <button onclick="checkBuilderAlternative()">Quick Check</button>
-                            <button onclick="challengeAIBuilder()" class="challenge-btn">Challenge AI</button>
+                            <button id="quick-check-btn" onclick="checkBuilderAlternative()">Quick Check</button>
                         </div>
                         <div id="builder-alternative-feedback" class="feedback-display" style="display: none;"></div>
+                        <div id="alternative-actions" class="alternative-actions" style="display: none;">
+                            <button onclick="checkBuilderAlternative()" class="try-again-btn">Try Again</button>
+                            <button onclick="getStructuredHint()" class="hint-btn">Get Hint</button>
+                            <button onclick="challengeAIBuilder()" class="challenge-btn">Challenge AI</button>
+                            <button id="show-answer-btn" onclick="showBuilderAnswer()" class="show-answer-btn" style="display: none;">Show Answer</button>
+                            <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn" style="display: none;">Continue to Proof →</button>
+                        </div>
                     </div>
 
                     <!-- Proof Construction -->
@@ -1158,305 +1203,349 @@
     </div>
 
     <script>
-        // State management
-        let state = {
-            currentStatementType: 'bare',
-            currentProblem: null,
-            selectedStrategy: null,
-            draggedElement: null,
-            originalStepsOrder: [],
-            attemptCounts: {
-                alternatives: {},
-                builder: 0
-            },
-            practiceProblems: {
-                bare: {
-                    statement: "√2 is irrational",
-                    alternative: "√2 is rational",
-                    variations: ["sqrt 2 is rational", "assume √2 rational", "root 2 is rational", "square root of 2 is rational"]
-                },
-                implication: {
-                    statement: "If n is even, then n² is even",
-                    alternative: "n is even but n² is odd",
-                    variations: ["n even and n² odd", "n is even but n squared is odd", "assume n even but n² not even", "n even and n² not even"]
-                },
-                universal: {
-                    statement: "Every prime number greater than 2 is odd",
-                    alternative: "There exists a prime number greater than 2 that is even", 
-                    variations: ["some prime > 2 is even", "find an even prime > 2", "exists even prime greater than 2", "some prime greater than 2 is even"]
-                },
-                existence: {
-                    statement: "There exists an irrational number",
-                    alternative: "All numbers are rational",
-                    variations: ["no irrational numbers exist", "assume all numbers rational", "every number is rational", "no numbers are irrational"]
-                }
-            }
-        };
-
-        // Sample problems for builder (fallback when AI is unavailable)
-        const sampleProblems = {
-            'bare-number-theory': {
-                statement: "√3 is irrational",
-                alternative: "√3 is rational",
-                preferredStrategy: "contradiction",
-                hint: "Assume √3 = p/q in lowest terms, then show both p and q must be divisible by 3.",
-                directProof: {
-                    assumption: "We need to prove √3 is irrational",
-                    conclusion: "Therefore √3 is irrational"
-                },
-                contradictionProof: {
-                    assumption: "Assume √3 is rational, so √3 = p/q where gcd(p,q) = 1",
-                    contradiction: "But gcd(p,q) = 1 and both p and q are divisible by 3 - Contradiction!"
-                },
-                steps: [
-                    "Square both sides: 3 = p²/q²",
-                    "Multiply by q²: 3q² = p²",
-                    "Since p² is divisible by 3, p must be divisible by 3. Let p = 3k",
-                    "Substitute: 3q² = (3k)² = 9k²",
-                    "Simplify: q² = 3k²",
-                    "Since q² is divisible by 3, q must be divisible by 3"
-                ]
-            }
-        };
-
-        // DOM references
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        // Initialize
-        function init() {
-            setupTabs();
-            showStatementType('bare', document.querySelector('[data-type="bare"]'));
+// State management
+let state = {
+    currentStatementType: 'bare',
+    currentProblem: null,
+    selectedStrategy: null,
+    draggedElement: null,
+    originalStepsOrder: [],
+    attemptCounts: {
+        alternatives: {},
+        builder: 0
+    },
+    practiceProblems: {
+        bare: {
+            statement: "√2 is irrational",
+            alternative: "√2 is rational",
+            variations: ["sqrt 2 is rational", "assume √2 rational", "root 2 is rational", "square root of 2 is rational"]
+        },
+        implication: {
+            statement: "If n is even, then n² is even",
+            alternative: "n is even but n² is odd",
+            variations: ["n even and n² odd", "n is even but n squared is odd", "assume n even but n² not even", "n even and n² not even"]
+        },
+        universal: {
+            statement: "Every prime number greater than 2 is odd",
+            alternative: "There exists a prime number greater than 2 that is even",
+            variations: ["some prime > 2 is even", "find an even prime > 2", "exists even prime greater than 2", "some prime greater than 2 is even"]
+        },
+        existence: {
+            statement: "There exists an irrational number",
+            alternative: "All numbers are rational",
+            variations: ["no irrational numbers exist", "assume all numbers rational", "every number is rational", "no numbers are irrational"]
         }
+    }
+};
 
-        // Tab switching
-        function setupTabs() {
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const tabId = button.getAttribute('data-tab');
-                    switchTab(tabId);
-                });
-            });
-        }
+// Sample problems for builder (fallback when AI is unavailable)
+const sampleProblems = {
+    'bare-number-theory': {
+        statement: "√3 is irrational",
+        alternative: "√3 is rational",
+        preferredStrategy: "contradiction",
+        hint: "Assume √3 = p/q in lowest terms, then show both p and q must be divisible by 3.",
+        directProof: {
+            assumption: "We need to prove √3 is irrational",
+            conclusion: "Therefore √3 is irrational"
+        },
+        contradictionProof: {
+            assumption: "Assume √3 is rational, so √3 = p/q where gcd(p,q) = 1",
+            contradiction: "But gcd(p,q) = 1 and both p and q are divisible by 3 - Contradiction!"
+        },
+        steps: [
+            "Square both sides: 3 = p²/q²",
+            "Multiply by q²: 3q² = p²",
+            "Since p² is divisible by 3, p must be divisible by 3. Let p = 3k",
+            "Substitute: 3q² = (3k)² = 9k²",
+            "Simplify: q² = 3k²",
+            "Since q² is divisible by 3, q must be divisible by 3"
+        ]
+    },
+    'existence-number-theory': {
+        statement: "There exists a prime number between 10 and 20",
+        alternative: "There is no prime number between 10 and 20",
+        preferredStrategy: "direct",
+        hint: "To prove existence, you just need to find one example. Check if 11, 13, 17, or 19 are prime.",
+        directProof: {
+            assumption: "We need to prove there exists a prime between 10 and 20",
+            conclusion: "Therefore, there exists a prime number between 10 and 20"
+        },
+        contradictionProof: {
+            assumption: "Assume there is no prime number between 10 and 20",
+            contradiction: "But 11 is prime and 10 < 11 < 20 - Contradiction!"
+        },
+        steps: [
+            "Consider the number 11, which is between 10 and 20",
+            "Check if 11 has any divisors other than 1 and itself",
+            "11 is not divisible by 2 (it's odd)",
+            "11 is not divisible by 3 (11 = 3×3 + 2)",
+            "We only need to check up to √11 ≈ 3.3, so we've checked all necessary divisors",
+            "Since 11 has no divisors other than 1 and 11, it is prime"
+        ]
+    },
+    'existence-algebra': {
+        statement: "There exists a real number $x$ such that $x^2 - 5x + 6 = 0$",
+        alternative: "For all real numbers $x$, $x^2 - 5x + 6 ≠ 0$",
+        preferredStrategy: "direct",
+        hint: "Factor the quadratic: $x^2 - 5x + 6 = (x-2)(x-3)$",
+        directProof: {
+            assumption: "We need to find a real number $x$ such that $x^2 - 5x + 6 = 0$",
+            conclusion: "Therefore, there exists a real number $x$ satisfying the equation"
+        },
+        contradictionProof: {
+            assumption: "Assume for all real $x$, $x^2 - 5x + 6 ≠ 0$",
+            contradiction: "But $x = 2$ gives $4 - 10 + 6 = 0$ - Contradiction!"
+        },
+        steps: [
+            "Factor the quadratic: $x^2 - 5x + 6 = (x-2)(x-3)$",
+            "Set each factor equal to zero: $x-2 = 0$ or $x-3 = 0$",
+            "Solve: $x = 2$ or $x = 3$",
+            "Verify with $x = 2$: $2^2 - 5(2) + 6 = 4 - 10 + 6 = 0$ ✓",
+            "Verify with $x = 3$: $3^2 - 5(3) + 6 = 9 - 15 + 6 = 0$ ✓",
+            "Both $x = 2$ and $x = 3$ are real numbers that satisfy the equation"
+        ]
+    }
+};
 
-        function switchTab(tabId) {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-        }
+// DOM references
+const tabButtons = document.querySelectorAll('.tab-button');
+const tabContents = document.querySelectorAll('.tab-content');
 
-        // Statement type exploration (Tab 2)
-        function showStatementType(type, element) {
-            // Update active state
-            document.querySelectorAll('.statement-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            element.classList.add('active');
-            
-            state.currentStatementType = type;
-            state.attemptCounts.alternatives[type] = 0;
-            const problem = state.practiceProblems[type];
-            
-            document.getElementById('practice-statement').innerHTML = `
-                <strong>Practice Statement:</strong> ${problem.statement}
-            `;
-            
-            // Enable both buttons
-            document.getElementById('alternative-input').disabled = false;
-            document.getElementById('check-alternative').disabled = false;
-            document.getElementById('challenge-ai').disabled = false;
-            document.getElementById('alternative-input').placeholder = "What would you assume for contradiction?";
-            document.getElementById('alternative-input').value = "";
-            document.getElementById('alternative-feedback').style.display = 'none';
-            
-            // Typeset math if available
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([document.getElementById('practice-statement')]);
-            }
-        }
+// Initialize
+function init() {
+    setupTabs();
+    showStatementType('bare', document.querySelector('[data-type="bare"]'));
+}
 
-        function checkAlternative() {
-            const userInput = document.getElementById('alternative-input').value.toLowerCase().trim();
-            const problem = state.practiceProblems[state.currentStatementType];
-            const correctAlternative = problem.alternative.toLowerCase();
-            const variations = problem.variations.map(v => v.toLowerCase());
-            
-            const feedbackDiv = document.getElementById('alternative-feedback');
-            feedbackDiv.style.display = 'block';
-            
-            state.attemptCounts.alternatives[state.currentStatementType] = 
-                (state.attemptCounts.alternatives[state.currentStatementType] || 0) + 1;
-            
-            const attemptCount = state.attemptCounts.alternatives[state.currentStatementType];
-            
-            // More flexible checking
-            let isCorrect = false;
-            let isPartiallyCorrect = false;
-            let feedback = '';
-            
-            if (userInput === '') {
-                feedbackDiv.className = 'feedback-display info';
-                feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
-                return;
-            }
-            
-            // Check for exact or close matches
-            const normalizedInput = userInput.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-            const normalizedCorrect = correctAlternative.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-            
-            if (normalizedInput === normalizedCorrect || 
-                variations.some(v => normalizedInput.includes(v.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()))) {
-                isCorrect = true;
-            }
-            
-            // Check for partial understanding based on statement type
-            else if (state.currentStatementType === 'implication') {
-                if (userInput.includes('but') || userInput.includes('and') || userInput.includes('however')) {
-                    if (userInput.includes('not') || userInput.includes('odd')) {
-                        isPartiallyCorrect = true;
-                        feedback = "You're on the right track! For an implication P→Q, the negation is 'P is true AND Q is false'. Try to be more specific about both parts.";
-                    }
-                }
-            }
-            else if (state.currentStatementType === 'universal') {
-                if (userInput.includes('exists') || userInput.includes('some') || userInput.includes('find')) {
-                    isPartiallyCorrect = true;
-                    feedback = "Good! You recognize that the negation of 'all' is 'some' or 'exists'. Can you be more specific about what we're looking for?";
-                }
-            }
-            else if (state.currentStatementType === 'existence') {
-                if (userInput.includes('all') || userInput.includes('no') || userInput.includes('every')) {
-                    isPartiallyCorrect = true;
-                    feedback = "Right direction! The negation of 'there exists' is 'for all' or 'none'. Try to complete the statement.";
-                }
-            }
-            else if (state.currentStatementType === 'bare') {
-                if (userInput.includes('rational') || userInput.includes('finite') || userInput.includes('opposite')) {
-                    isPartiallyCorrect = true;
-                    feedback = "You're thinking about the opposite, which is good! Can you state it more precisely?";
-                }
-            }
-            
-            // Display appropriate feedback with attempt tracking
-            if (isCorrect) {
-                feedbackDiv.className = 'feedback-display success';
-                feedbackDiv.innerHTML = `
-                    <strong>Excellent!</strong><br>
-                    The alternative is: "${problem.alternative}"<br>
-                    This gives you something concrete to work with for contradiction.
-                `;
-            } else if (isPartiallyCorrect) {
-                feedbackDiv.className = 'feedback-display info';
-                let html = `
-                    <div class="feedback-section">
-                        <strong>You're getting closer!</strong>
-                        ${feedback}
-                    </div>
-                `;
-                
-                if (attemptCount >= 2) {
-                    html += `
-                        <div class="hint-progression">
-                            <strong>Hint:</strong> The complete alternative is: "${problem.alternative}"
-                            <div class="attempt-counter">Attempts: ${attemptCount}</div>
-                        </div>
-                    `;
-                } else {
-                    html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
-                }
-                
-                feedbackDiv.innerHTML = html;
-            } else {
-                feedbackDiv.className = 'feedback-display info';
-                let html = getHelpfulHint(state.currentStatementType, problem);
-                
-                if (attemptCount >= 3) {
-                    html += `
-                        <button class="show-answer-btn" onclick="showAlternativeAnswer()">Show Answer</button>
-                        <div class="attempt-counter">Attempts: ${attemptCount}</div>
-                    `;
-                } else {
-                    html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
-                }
-                
-                feedbackDiv.innerHTML = html;
-            }
-            
-            // Typeset math if available
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedbackDiv]);
+// Tab switching
+function setupTabs() {
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.getAttribute('data-tab');
+            switchTab(tabId);
+        });
+    });
+}
+
+function switchTab(tabId) {
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    tabContents.forEach(content => content.classList.remove('active'));
+    
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+// Statement type exploration (Tab 2)
+function showStatementType(type, element) {
+    // Update active state
+    document.querySelectorAll('.statement-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    element.classList.add('active');
+    
+    state.currentStatementType = type;
+    state.attemptCounts.alternatives[type] = 0;
+    const problem = state.practiceProblems[type];
+    
+    document.getElementById('practice-statement').innerHTML = `
+        <strong>Practice Statement:</strong> ${problem.statement}
+    `;
+    
+    // Enable both buttons
+    document.getElementById('alternative-input').disabled = false;
+    document.getElementById('check-alternative').disabled = false;
+    document.getElementById('challenge-ai').disabled = false;
+    document.getElementById('alternative-input').placeholder = "What would you assume for contradiction?";
+    document.getElementById('alternative-input').value = "";
+    document.getElementById('alternative-feedback').style.display = 'none';
+    
+    // Typeset math if available
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([document.getElementById('practice-statement')]);
+    }
+}
+
+function checkAlternative() {
+    const userInput = document.getElementById('alternative-input').value.toLowerCase().trim();
+    const problem = state.practiceProblems[state.currentStatementType];
+    const correctAlternative = problem.alternative.toLowerCase();
+    const variations = problem.variations.map(v => v.toLowerCase());
+    
+    const feedbackDiv = document.getElementById('alternative-feedback');
+    feedbackDiv.style.display = 'block';
+    
+    state.attemptCounts.alternatives[state.currentStatementType] = 
+        (state.attemptCounts.alternatives[state.currentStatementType] || 0) + 1;
+    
+    const attemptCount = state.attemptCounts.alternatives[state.currentStatementType];
+    
+    // More flexible checking
+    let isCorrect = false;
+    let isPartiallyCorrect = false;
+    let feedback = '';
+    
+    if (userInput === '') {
+        feedbackDiv.className = 'feedback-display info';
+        feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
+        return;
+    }
+    
+    // Check for exact or close matches
+    const normalizedInput = userInput.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    const normalizedCorrect = correctAlternative.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    
+    if (normalizedInput === normalizedCorrect || 
+        variations.some(v => normalizedInput.includes(v.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()))) {
+        isCorrect = true;
+    }
+    
+    // Check for partial understanding based on statement type
+    else if (state.currentStatementType === 'implication') {
+        if (userInput.includes('but') || userInput.includes('and') || userInput.includes('however')) {
+            if (userInput.includes('not') || userInput.includes('odd')) {
+                isPartiallyCorrect = true;
+                feedback = "You're on the right track! For an implication P→Q, the negation is 'P is true AND Q is false'. Try to be more specific about both parts.";
             }
         }
-
-        function showAlternativeAnswer() {
-            const problem = state.practiceProblems[state.currentStatementType];
-            const feedbackDiv = document.getElementById('alternative-feedback');
-            
-            feedbackDiv.className = 'feedback-display success';
-            feedbackDiv.innerHTML = `
-                <div class="correct-answer-reveal">
-                    <strong>The correct alternative is:</strong><br>
-                    "${problem.alternative}"<br><br>
-                    Understanding this negation is crucial for proof by contradiction. 
-                    Try another statement type to practice more!
+    }
+    else if (state.currentStatementType === 'universal') {
+        if (userInput.includes('exists') || userInput.includes('some') || userInput.includes('find')) {
+            isPartiallyCorrect = true;
+            feedback = "Good! You recognize that the negation of 'all' is 'some' or 'exists'. Can you be more specific about what we're looking for?";
+        }
+    }
+    else if (state.currentStatementType === 'existence') {
+        if (userInput.includes('all') || userInput.includes('no') || userInput.includes('every')) {
+            isPartiallyCorrect = true;
+            feedback = "Right direction! The negation of 'there exists' is 'for all' or 'none'. Try to complete the statement.";
+        }
+    }
+    else if (state.currentStatementType === 'bare') {
+        if (userInput.includes('rational') || userInput.includes('finite') || userInput.includes('opposite')) {
+            isPartiallyCorrect = true;
+            feedback = "You're thinking about the opposite, which is good! Can you state it more precisely?";
+        }
+    }
+    
+    // Display appropriate feedback with attempt tracking
+    if (isCorrect) {
+        feedbackDiv.className = 'feedback-display success';
+        feedbackDiv.innerHTML = `
+            <strong>Excellent!</strong><br>
+            The alternative is: "${problem.alternative}"<br>
+            This gives you something concrete to work with for contradiction.
+        `;
+    } else if (isPartiallyCorrect) {
+        feedbackDiv.className = 'feedback-display info';
+        let html = `
+            <div class="feedback-section">
+                <strong>You're getting closer!</strong>
+                ${feedback}
+            </div>
+        `;
+        
+        if (attemptCount >= 2) {
+            html += `
+                <div class="hint-progression">
+                    <strong>Hint:</strong> The complete alternative is: "${problem.alternative}"
+                    <div class="attempt-counter">Attempts: ${attemptCount}</div>
                 </div>
             `;
-            
-            // Typeset math if available
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedbackDiv]);
-            }
+        } else {
+            html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
         }
         
-        function getHelpfulHint(type, problem) {
-            const hints = {
-                'bare': `<strong>Think step by step:</strong><br>
-                        To negate "${problem.statement}", consider: what would be the opposite?<br>
-                        <small>Hint: If something is irrational, its opposite would be...?</small>`,
-                        
-                'implication': `<strong>For if-then statements:</strong><br>
-                               To negate "If P, then Q", you need "P is true AND Q is false"<br>
-                               <small>Think: "${problem.statement.split(',')[0]}" is true, but the conclusion fails.</small>`,
-                               
-                'universal': `<strong>For "all" statements:</strong><br>
-                             To negate "For all x, P(x)", you need "There exists some x where P(x) is false"<br>
-                             <small>What specific counterexample would you look for?</small>`,
-                             
-                'existence': `<strong>For "there exists" statements:</strong><br>
-                             To negate "There exists x such that P(x)", you need "For all x, P(x) is false"<br>
-                             <small>You're saying no such thing exists anywhere.</small>`
-            };
-            
-            return hints[type] || 'Try thinking about what the logical opposite would be.';
+        feedbackDiv.innerHTML = html;
+    } else {
+        feedbackDiv.className = 'feedback-display info';
+        let html = getHelpfulHintAlternatives(state.currentStatementType, problem);
+        
+        if (attemptCount >= 3) {
+            html += `
+                <button class="show-answer-btn" onclick="showAlternativeAnswer()">Show Answer</button>
+                <div class="attempt-counter">Attempts: ${attemptCount}</div>
+            `;
+        } else {
+            html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
         }
+        
+        feedbackDiv.innerHTML = html;
+    }
+    
+    // Typeset math if available
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([feedbackDiv]);
+    }
+}
 
-        async function challengeAI() {
-            const userInput = document.getElementById('alternative-input').value.trim();
-            const problem = state.practiceProblems[state.currentStatementType];
-            const feedbackDiv = document.getElementById('alternative-feedback');
-            const challengeBtn = document.getElementById('challenge-ai');
-            
-            if (userInput === '') {
-                feedbackDiv.style.display = 'block';
-                feedbackDiv.className = 'feedback-display info';
-                feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
-                return;
-            }
-            
-            challengeBtn.disabled = true;
-            challengeBtn.textContent = 'AI Analyzing...';
-            
-            try {
-                const typeExplanations = {
-                    'bare': 'a bare statement (just P)',
-                    'implication': 'an implication statement (if P then Q)',
-                    'universal': 'a universal statement (for all x, P(x))',
-                    'existence': 'an existence statement (there exists x such that P(x))'
-                };
+function showAlternativeAnswer() {
+    const problem = state.practiceProblems[state.currentStatementType];
+    const feedbackDiv = document.getElementById('alternative-feedback');
+    
+    feedbackDiv.className = 'feedback-display success';
+    feedbackDiv.innerHTML = `
+        <div class="correct-answer-reveal">
+            <strong>The correct alternative is:</strong><br>
+            "${problem.alternative}"<br><br>
+            Understanding this negation is crucial for proof by contradiction. 
+            Try another statement type to practice more!
+        </div>
+    `;
+    
+    // Typeset math if available
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([feedbackDiv]);
+    }
+}
+
+function getHelpfulHintAlternatives(type, problem) {
+    const hints = {
+        'bare': `<strong>Think step by step:</strong><br>
+                To negate "${problem.statement}", consider: what would be the opposite?<br>
+                <small>Hint: If something is irrational, its opposite would be...?</small>`,
                 
-                const prompt = `You are a supportive mathematics tutor helping a student learn proof by contradiction. The student is working on identifying negations.
+        'implication': `<strong>For if-then statements:</strong><br>
+                       To negate "If P, then Q", you need "P is true AND Q is false"<br>
+                       <small>Think: "${problem.statement.split(',')[0]}" is true, but the conclusion fails.</small>`,
+                       
+        'universal': `<strong>For "all" statements:</strong><br>
+                     To negate "For all x, P(x)", you need "There exists some x where P(x) is false"<br>
+                     <small>What specific counterexample would you look for?</small>`,
+                     
+        'existence': `<strong>For "there exists" statements:</strong><br>
+                     To negate "There exists x such that P(x)", you need "For all x, P(x) is false"<br>
+                     <small>You're saying no such thing exists anywhere.</small>`
+    };
+    
+    return hints[type] || 'Try thinking about what the logical opposite would be.';
+}
+
+async function challengeAI() {
+    const userInput = document.getElementById('alternative-input').value.trim();
+    const problem = state.practiceProblems[state.currentStatementType];
+    const feedbackDiv = document.getElementById('alternative-feedback');
+    const challengeBtn = document.getElementById('challenge-ai');
+    
+    if (userInput === '') {
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.className = 'feedback-display info';
+        feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
+        return;
+    }
+    
+    challengeBtn.disabled = true;
+    challengeBtn.textContent = 'AI Analyzing...';
+    
+    try {
+        const typeExplanations = {
+            'bare': 'a bare statement (just P)',
+            'implication': 'an implication statement (if P then Q)',
+            'universal': 'a universal statement (for all x, P(x))',
+            'existence': 'an existence statement (there exists x such that P(x))'
+        };
+        
+        const prompt = `You are a supportive mathematics tutor helping a student learn proof by contradiction. The student is working on identifying negations.
 
 Statement type: ${typeExplanations[state.currentStatementType]}
 Original statement: "${problem.statement}"
@@ -1474,172 +1563,172 @@ Keep response to 2-3 sentences maximum.
 
 Important: Do NOT directly state the correct answer unless the student already got it right.`;
 
-                const response = await callAI(prompt);
-                
-                feedbackDiv.style.display = 'block';
-                feedbackDiv.className = 'feedback-display info';
-                
-                // Process the response to ensure LaTeX rendering
-                const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
-                    return `$${p1}$`;
-                });
-                
-                feedbackDiv.innerHTML = `
-                    <div class="feedback-section">
-                        <strong>AI Feedback:</strong><br>
-                        ${processedResponse}
-                    </div>
-                `;
-                
-                // Typeset math in the feedback
-                if (window.MathJax && window.MathJax.typesetPromise) {
-                    window.MathJax.typesetPromise([feedbackDiv]);
-                }
-                
-            } catch (error) {
-                console.error('AI challenge failed:', error);
-                feedbackDiv.style.display = 'block';
-                feedbackDiv.className = 'feedback-display error';
-                feedbackDiv.innerHTML = `
-                    <strong>AI temporarily unavailable.</strong><br>
-                    ${getHelpfulHint(state.currentStatementType, problem)}
-                `;
+        const response = await callAI(prompt);
+        
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.className = 'feedback-display info';
+        
+        // Process the response to ensure LaTeX rendering
+        const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
+            return `$${p1}$`;
+        });
+        
+        feedbackDiv.innerHTML = `
+            <div class="feedback-section">
+                <strong>AI Feedback:</strong><br>
+                ${processedResponse}
+            </div>
+        `;
+        
+        // Typeset math in the feedback
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([feedbackDiv]);
+        }
+        
+    } catch (error) {
+        console.error('AI challenge failed:', error);
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.className = 'feedback-display error';
+        feedbackDiv.innerHTML = `
+            <strong>AI temporarily unavailable.</strong><br>
+            ${getHelpfulHintAlternatives(state.currentStatementType, problem)}
+        `;
+    }
+    
+    challengeBtn.disabled = false;
+    challengeBtn.textContent = 'Challenge AI';
+}
+
+// AI API integration
+async function callAI(prompt, maxRetries = 2) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            if (attempt > 0) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             }
             
-            challengeBtn.disabled = false;
-            challengeBtn.textContent = 'Challenge AI';
-        }
-
-        // AI API integration
-        async function callAI(prompt, maxRetries = 2) {
-            for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                try {
-                    if (attempt > 0) {
-                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                    }
-                    
-                    const response = await fetch('/api/gemini', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            contents: [{ role: "user", parts: [{ text: prompt }] }] 
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    
-                    if (!text) {
-                        throw new Error('Empty response from AI');
-                    }
-                    
-                    return text;
-                    
-                } catch (error) {
-                    console.error(`AI attempt ${attempt + 1} failed:`, error);
-                    if (attempt === maxRetries) {
-                        throw error;
-                    }
-                }
+            const response = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    contents: [{ role: "user", parts: [{ text: prompt }] }] 
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (!text) {
+                throw new Error('Empty response from AI');
+            }
+            
+            return text;
+            
+        } catch (error) {
+            console.error(`AI attempt ${attempt + 1} failed:`, error);
+            if (attempt === maxRetries) {
+                throw error;
             }
         }
+    }
+}
 
-        function extractJSON(text) {
-            try {
-                // Try direct JSON parse first
-                return JSON.parse(text);
-            } catch {
-                // Try to find JSON in the response
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) {
-                    throw new Error('No JSON found in response');
-                }
-                
-                const cleaned = jsonMatch[0]
-                    .replace(/```json\s*/g, '')
-                    .replace(/```\s*/g, '')
-                    .trim();
-                
-                try {
-                    return JSON.parse(cleaned);
-                } catch (e) {
-                    throw new Error('Invalid JSON format');
-                }
-            }
+function extractJSON(text) {
+    try {
+        // Try direct JSON parse first
+        return JSON.parse(text);
+    } catch {
+        // Try to find JSON in the response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('No JSON found in response');
         }
-
-        function validateProblem(data) {
-            // Validate required fields
-            const required = [
-                'statement', 
-                'alternative', 
-                'preferredStrategy', 
-                'hint', 
-                'directProof', 
-                'contradictionProof', 
-                'steps'
-            ];
-            
-            for (const field of required) {
-                if (!(field in data)) {
-                    throw new Error(`Missing required field: ${field}`);
-                }
-            }
-            
-            // Validate nested fields
-            if (!data.directProof.assumption || !data.directProof.conclusion) {
-                throw new Error('Missing direct proof fields');
-            }
-            
-            if (!data.contradictionProof.assumption || !data.contradictionProof.contradiction) {
-                throw new Error('Missing contradiction proof fields');
-            }
-            
-            // Validate steps is an array with at least 3 elements
-            if (!Array.isArray(data.steps) || data.steps.length < 3) {
-                throw new Error('Steps must be an array with at least 3 elements');
-            }
-            
-            return data;
+        
+        const cleaned = jsonMatch[0]
+            .replace(/```json\s*/g, '')
+            .replace(/```\s*/g, '')
+            .trim();
+        
+        try {
+            return JSON.parse(cleaned);
+        } catch (e) {
+            throw new Error('Invalid JSON format');
         }
+    }
+}
 
-        // Proof Builder (Tab 3)
-        async function generateProblem() {
-            const type = document.getElementById('statement-type').value;
-            const area = document.getElementById('subject-area').value;
-            const btn = document.querySelector('.generate-btn');
+function validateProblem(data) {
+    // Validate required fields
+    const required = [
+        'statement', 
+        'alternative', 
+        'preferredStrategy', 
+        'hint', 
+        'directProof', 
+        'contradictionProof', 
+        'steps'
+    ];
+    
+    for (const field of required) {
+        if (!(field in data)) {
+            throw new Error(`Missing required field: ${field}`);
+        }
+    }
+    
+    // Validate nested fields
+    if (!data.directProof.assumption || !data.directProof.conclusion) {
+        throw new Error('Missing direct proof fields');
+    }
+    
+    if (!data.contradictionProof.assumption || !data.contradictionProof.contradiction) {
+        throw new Error('Missing contradiction proof fields');
+    }
+    
+    // Validate steps is an array with at least 3 elements
+    if (!Array.isArray(data.steps) || data.steps.length < 3) {
+        throw new Error('Steps must be an array with at least 3 elements');
+    }
+    
+    return data;
+}
+
+// Proof Builder (Tab 3)
+async function generateProblem() {
+    const type = document.getElementById('statement-type').value;
+    const area = document.getElementById('subject-area').value;
+    const btn = document.querySelector('.generate-btn');
+    
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    
+    // Reset attempt counter for builder
+    state.attemptCounts.builder = 0;
+    
+    // Build the key from user's selection
+    const key = `${type}-${area}`;
+    
+    // Try AI generation first
+    try {
+        const typeDescriptions = {
+            'bare': 'a simple statement P (like "√2 is irrational")',
+            'implication': 'an if-then statement P→Q (like "if n is even, then n² is even")',
+            'universal': 'a universal statement ∀x P(x) (like "for all integers n, n² ≥ 0")',
+            'existence': 'an existence statement ∃x P(x) (like "there exists a prime between 10 and 20")'
+        };
+        
+        const areaDescriptions = {
+            'number-theory': 'number theory (integers, primes, divisibility, rational/irrational numbers)',
+            'geometry': 'geometry (triangles, circles, angles, areas)',
+            'algebra': 'algebra (equations, inequalities, polynomials)',
+            'analysis': 'real analysis (limits, continuity, sequences, convergence)'
+        };
+        
+        const prompt = `Generate a mathematical proof problem.
             
-            btn.disabled = true;
-            btn.textContent = 'Generating...';
-            
-            // Reset attempt counter for builder
-            state.attemptCounts.builder = 0;
-            
-            // Build the key from user's selection
-            const key = `${type}-${area}`;
-            
-            // Try AI generation first
-            try {
-                const typeDescriptions = {
-                    'bare': 'a simple statement P (like "√2 is irrational")',
-                    'implication': 'an if-then statement P→Q (like "if n is even, then n² is even")',
-                    'universal': 'a universal statement ∀x P(x) (like "for all integers n, n² ≥ 0")',
-                    'existence': 'an existence statement ∃x P(x) (like "there exists a prime between 10 and 20")'
-                };
-                
-                const areaDescriptions = {
-                    'number-theory': 'number theory (integers, primes, divisibility, rational/irrational numbers)',
-                    'geometry': 'geometry (triangles, circles, angles, areas)',
-                    'algebra': 'algebra (equations, inequalities, polynomials)',
-                    'analysis': 'real analysis (limits, continuity, sequences, convergence)'
-                };
-                
-                const prompt = `Generate a mathematical proof problem.
-                
 Statement type: ${typeDescriptions[type]}
 Subject area: ${areaDescriptions[area]}
 
@@ -1682,217 +1771,391 @@ For "bare statement" in "number theory", you might generate a problem about √5
 
 RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
 
-                const response = await callAI(prompt);
-                const parsed = extractJSON(response);
-                state.currentProblem = validateProblem(parsed);
-                
-                console.log('AI generated problem:', state.currentProblem);
-                
-            } catch (error) {
-                console.error('AI generation failed:', error);
-                
-                // Use fallback problems based on user's selection
-                if (sampleProblems[key]) {
-                    state.currentProblem = sampleProblems[key];
-                } else {
-                    // If exact combination doesn't exist, try to find closest match
-                    const fallbackKey = Object.keys(sampleProblems).find(k => 
-                        k.includes(type) || k.includes(area)
-                    );
-                    state.currentProblem = sampleProblems[fallbackKey] || sampleProblems['bare-number-theory'];
-                }
-                
-                // Show subtle notification that fallback is being used
-                const notification = document.createElement('div');
-                notification.className = 'warning-notice';
-                notification.innerHTML = 'Using pre-loaded problem (AI temporarily unavailable)';
-                notification.style.position = 'fixed';
-                notification.style.top = '20px';
-                notification.style.right = '20px';
-                notification.style.zIndex = '2000';
-                document.body.appendChild(notification);
-                setTimeout(() => notification.remove(), 3000);
-            }
-            
-            // Display the problem
-            document.getElementById('theorem-text').innerHTML = state.currentProblem.statement;
-            document.getElementById('current-problem').classList.add('active');
-            
-            // Reset UI
-            resetBuilderUI();
-            
-            btn.disabled = false;
-            btn.textContent = 'Generate Problem with AI';
-            
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise();
-            }
+        const response = await callAI(prompt);
+        const parsed = extractJSON(response);
+        state.currentProblem = validateProblem(parsed);
+        
+        console.log('AI generated problem:', state.currentProblem);
+        
+    } catch (error) {
+        console.error('AI generation failed:', error);
+        
+        // Use fallback problems based on user's selection
+        if (sampleProblems[key]) {
+            state.currentProblem = sampleProblems[key];
+        } else {
+            // If exact combination doesn't exist, try to find closest match
+            const fallbackKey = Object.keys(sampleProblems).find(k => 
+                k.includes(type) || k.includes(area)
+            );
+            state.currentProblem = sampleProblems[fallbackKey] || sampleProblems['bare-number-theory'];
         }
+        
+        // Show subtle notification that fallback is being used
+        const notification = document.createElement('div');
+        notification.className = 'warning-notice';
+        notification.innerHTML = 'Using pre-loaded problem (AI temporarily unavailable)';
+        notification.style.position = 'fixed';
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '2000';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
+    
+    // Display the problem
+    document.getElementById('theorem-text').innerHTML = state.currentProblem.statement;
+    document.getElementById('current-problem').classList.add('active');
+    
+    // Reset UI
+    resetBuilderUI();
+    
+    btn.disabled = false;
+    btn.textContent = 'Generate Problem with AI';
+    
+    // Typeset math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise();
+    }
+}
 
-        function resetBuilderUI() {
-            // Clear selections
-            document.querySelectorAll('.strategy-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            
-            // Hide sections
-            document.getElementById('alternative-section').classList.remove('active');
-            document.getElementById('proof-construction').classList.remove('active');
-            document.getElementById('complete-proof').classList.remove('active');
-            document.getElementById('strategy-feedback').style.display = 'none';
-            document.getElementById('builder-alternative-feedback').style.display = 'none';
-            document.getElementById('proof-feedback').style.display = 'none';
-            
-            state.selectedStrategy = null;
-            state.attemptCounts.builder = 0;
+function resetBuilderUI() {
+    // Clear selections
+    document.querySelectorAll('.strategy-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Hide sections
+    document.getElementById('alternative-section').classList.remove('active');
+    document.getElementById('proof-construction').classList.remove('active');
+    document.getElementById('complete-proof').classList.remove('active');
+    document.getElementById('strategy-feedback').style.display = 'none';
+    document.getElementById('builder-alternative-feedback').style.display = 'none';
+    document.getElementById('proof-feedback').style.display = 'none';
+    
+    // Reset input and buttons
+    document.getElementById('builder-alternative-input').value = '';
+    document.getElementById('builder-alternative-input').disabled = false;
+    const quickCheckBtn = document.getElementById('quick-check-btn');
+    if (quickCheckBtn) quickCheckBtn.style.display = 'inline-block';
+    document.getElementById('alternative-actions').style.display = 'none';
+    
+    state.selectedStrategy = null;
+    state.attemptCounts.builder = 0;
+}
+
+function selectBuilderStrategy(strategy) {
+    state.selectedStrategy = strategy;
+    
+    // Update buttons
+    document.querySelectorAll('.strategy-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    event.target.closest('.strategy-btn').classList.add('selected');
+    
+    // Show feedback
+    const feedback = document.getElementById('strategy-feedback');
+    feedback.style.display = 'flex';
+    
+    if (strategy === state.currentProblem.preferredStrategy) {
+        feedback.className = 'feedback-display success';
+        feedback.innerHTML = '<strong>Excellent choice!</strong><br>This approach works well for this statement.';
+    } else {
+        feedback.className = 'feedback-display info';
+        feedback.innerHTML = '<strong>Good thinking!</strong><br>This approach can work too. Let\'s proceed!';
+    }
+    
+    // Show next step
+    if (strategy === 'contradiction') {
+        document.getElementById('alternative-section').classList.add('active');
+        document.getElementById('builder-alternative-input').value = '';
+        document.getElementById('builder-alternative-input').disabled = false;
+        document.getElementById('builder-alternative-feedback').style.display = 'none';
+        document.getElementById('alternative-actions').style.display = 'none';
+        const quickCheckBtn = document.getElementById('quick-check-btn');
+        if (quickCheckBtn) quickCheckBtn.style.display = 'inline-block';
+        state.attemptCounts.builder = 0; // Reset attempts for new section
+    } else {
+        document.getElementById('alternative-section').classList.remove('active');
+        buildProofStructure();
+    }
+}
+
+// Proof Builder Alternative Check Functions
+function checkBuilderAlternative() {
+    const input = document.getElementById('builder-alternative-input').value.trim();
+    const feedback = document.getElementById('builder-alternative-feedback');
+    const actionsDiv = document.getElementById('alternative-actions');
+    
+    if (!input) {
+        feedback.style.display = 'flex';
+        feedback.className = 'feedback-display info';
+        feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
+        actionsDiv.style.display = 'none';
+        return;
+    }
+    
+    state.attemptCounts.builder++;
+    const attemptCount = state.attemptCounts.builder;
+    
+    // Keep input active - never disable it
+    const inputField = document.getElementById('builder-alternative-input');
+    inputField.disabled = false;
+    
+    feedback.style.display = 'flex';
+    actionsDiv.style.display = 'flex';
+    
+    // Hide quick check button after first check
+    const quickCheckBtn = document.getElementById('quick-check-btn');
+    if (quickCheckBtn) {
+        quickCheckBtn.style.display = 'none';
+    }
+    
+    // Analyze the answer
+    const inputLower = input.toLowerCase();
+    const correctLower = state.currentProblem.alternative.toLowerCase();
+    
+    // Check for correctness
+    const keyWords = correctLower.split(' ').filter(word => word.length > 3);
+    const matchCount = keyWords.filter(word => inputLower.includes(word)).length;
+    const matchRatio = keyWords.length > 0 ? matchCount / keyWords.length : 0;
+    
+    let isCorrect = matchRatio > 0.7;
+    let isPartial = matchRatio > 0.3;
+    
+    // Generate specific feedback based on what they wrote and attempt number
+    let feedbackHTML = '';
+    
+    if (isCorrect) {
+        feedback.className = 'feedback-display success';
+        feedbackHTML = `
+            <div class="feedback-section">
+                <strong>✅ Excellent!</strong>
+                Yes, for proof by contradiction we assume: "${state.currentProblem.alternative}"<br>
+                You've correctly identified what to assume. Ready to construct the proof?
+            </div>
+        `;
+        
+        // Show only the continue button for correct answers
+        actionsDiv.innerHTML = `
+            <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn">Continue to Proof →</button>
+        `;
+        
+    } else if (isPartial) {
+        feedback.className = 'feedback-display info';
+        
+        // Progressive feedback based on attempts
+        if (attemptCount === 1) {
+            feedbackHTML = `
+                <div class="feedback-section">
+                    <strong>Good start!</strong>
+                    You wrote "<em>${input}</em>" - you're on the right track!<br>
+                    ${getPartialFeedback(input, state.currentProblem)}
+                </div>
+            `;
+        } else if (attemptCount === 2) {
+            feedbackHTML = `
+                <div class="feedback-section">
+                    <strong>Getting closer!</strong>
+                    You wrote "<em>${input}</em>"<br>
+                    ${getMoreSpecificFeedback(input, state.currentProblem)}
+                </div>
+            `;
+        } else {
+            feedbackHTML = `
+                <div class="feedback-section">
+                    <strong>You're almost there!</strong>
+                    You wrote "<em>${input}</em>"<br>
+                    The complete negation is: "<strong>${state.currentProblem.alternative}</strong>"<br>
+                    Try to match this format exactly, or you can proceed with the proof.
+                </div>
+            `;
         }
-
-        function selectBuilderStrategy(strategy) {
-            state.selectedStrategy = strategy;
-            
-            // Update buttons
-            document.querySelectorAll('.strategy-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            event.target.closest('.strategy-btn').classList.add('selected');
-            
-            // Show feedback
-            const feedback = document.getElementById('strategy-feedback');
-            feedback.style.display = 'flex';
-            
-            if (strategy === state.currentProblem.preferredStrategy) {
-                feedback.className = 'feedback-display success';
-                feedback.innerHTML = '<strong>Excellent choice!</strong><br>This approach works well for this statement.';
-            } else {
-                feedback.className = 'feedback-display info';
-                feedback.innerHTML = '<strong>Good thinking!</strong><br>This approach can work too. Let\'s proceed!';
-            }
-            
-            // Show next step
-            if (strategy === 'contradiction') {
-                document.getElementById('alternative-section').classList.add('active');
-                document.getElementById('builder-alternative-input').value = '';
-                document.getElementById('builder-alternative-feedback').style.display = 'none';
-                state.attemptCounts.builder = 0; // Reset attempts for new section
-            } else {
-                document.getElementById('alternative-section').classList.remove('active');
-                buildProofStructure();
-            }
+        
+    } else {
+        feedback.className = 'feedback-display info';
+        
+        // Progressive feedback for incorrect answers
+        if (attemptCount === 1) {
+            feedbackHTML = `
+                <div class="feedback-section">
+                    <strong>Let's think about this differently:</strong>
+                    You wrote "<em>${input}</em>"<br>
+                    ${getInitialGuidance(state.currentProblem)}
+                </div>
+            `;
+        } else if (attemptCount === 2) {
+            feedbackHTML = `
+                <div class="feedback-section">
+                    <strong>Here's a more specific hint:</strong>
+                    You wrote "<em>${input}</em>"<br>
+                    ${getStructuredGuidance(state.currentProblem)}
+                </div>
+            `;
+        } else {
+            feedbackHTML = `
+                <div class="feedback-section">
+                    <strong>Let me help you understand:</strong>
+                    The original statement is: "${state.currentProblem.statement}"<br>
+                    For proof by contradiction, we assume: "<strong>${state.currentProblem.alternative}</strong>"<br>
+                    This is the exact opposite of what we want to prove.
+                </div>
+            `;
         }
+    }
+    
+    feedback.innerHTML = feedbackHTML + `<div class="attempt-counter">Attempt ${attemptCount}</div>`;
+    
+    // Show appropriate action buttons (only if not correct)
+    if (!isCorrect) {
+        actionsDiv.innerHTML = `
+            <button onclick="checkBuilderAlternative()" class="try-again-btn">Try Again</button>
+            <button onclick="getStructuredHint()" class="hint-btn">Get Hint</button>
+            <button onclick="challengeAIBuilder()" class="challenge-btn">Challenge AI</button>
+            <button id="show-answer-btn" onclick="showBuilderAnswer()" class="show-answer-btn" style="display: ${attemptCount >= 3 ? 'inline-block' : 'none'};">Show Answer</button>
+            <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn" style="display: none;">Continue to Proof →</button>
+        `;
+    }
+    
+    // Typeset math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([feedback]);
+    }
+}
 
-        function checkBuilderAlternative() {
-            const input = document.getElementById('builder-alternative-input').value.trim();
-            const feedback = document.getElementById('builder-alternative-feedback');
-            
-            state.attemptCounts.builder++;
-            
-            if (!input) {
-                feedback.style.display = 'flex';
-                feedback.className = 'feedback-display info';
-                feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
-                return;
-            }
-            
-            feedback.style.display = 'flex';
-            
-            // More flexible checking for generated problems
-            const inputLower = input.toLowerCase();
-            const correctLower = state.currentProblem.alternative.toLowerCase();
-            
-            // Check for key concepts based on problem type
-            let isCorrect = false;
-            let isPartial = false;
-            let hint = '';
-            
-            // Simple keyword matching for common patterns
-            const keyWords = correctLower.split(' ').filter(word => word.length > 3);
-            const matchCount = keyWords.filter(word => inputLower.includes(word)).length;
-            const matchRatio = matchCount / keyWords.length;
-            
-            if (matchRatio > 0.7) {
-                isCorrect = true;
-            } else if (matchRatio > 0.4) {
-                isPartial = true;
-                hint = "You have the right idea! Try to be more precise about the exact negation.";
-            } else {
-                hint = "Remember: for proof by contradiction, you assume the exact opposite of what you want to prove.";
-            }
-            
-            if (isCorrect) {
-                feedback.className = 'feedback-display success';
-                feedback.innerHTML = `
-                    <strong>Correct!</strong><br>
-                    Yes, we assume: "${state.currentProblem.alternative}"
-                `;
-                setTimeout(() => buildProofStructure(), 1500);
-            } else if (isPartial) {
-                feedback.className = 'feedback-display info';
-                let html = `
-                    <div class="feedback-section">
-                        <strong>Getting closer!</strong><br>
-                        ${hint}
-                    </div>
-                `;
-                
-                if (state.attemptCounts.builder >= 2) {
-                    html += `
-                        <div class="hint-progression">
-                            The correct alternative is: "${state.currentProblem.alternative}"
-                            <button class="show-answer-btn" onclick="proceedWithProof()">Continue →</button>
-                        </div>
-                    `;
-                }
-                
-                feedback.innerHTML = html;
-            } else {
-                feedback.className = 'feedback-display info';
-                let html = `
-                    <div class="feedback-section">
-                        <strong>Think about the logical negation:</strong><br>
-                        ${hint}
-                    </div>
-                `;
-                
-                if (state.attemptCounts.builder >= 3) {
-                    html += `
-                        <div class="correct-answer-reveal">
-                            The correct alternative is: "${state.currentProblem.alternative}"
-                            <button class="show-answer-btn" onclick="proceedWithProof()">Continue with Proof →</button>
-                        </div>
-                    `;
-                }
-                
-                feedback.innerHTML = html;
-            }
-            
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedback]);
-            }
+function getPartialFeedback(input, problem) {
+    // Context-aware feedback for partial answers
+    const statementType = document.getElementById('statement-type').value;
+    
+    if (statementType === 'implication') {
+        if (input.includes('odd') || input.includes('not even')) {
+            return "You have the conclusion part right! But for implications (If P then Q), the negation needs both: 'P is true AND Q is false'.";
         }
+        return "For implications, remember: the negation is 'the premise is true BUT the conclusion is false'.";
+    } else if (statementType === 'universal') {
+        return "You're thinking about negating 'all'. The negation of 'all' is 'there exists at least one' that doesn't satisfy the property.";
+    } else if (statementType === 'existence') {
+        return "To negate 'there exists', we say 'for all' or 'none exist'. Think about what that means for this specific statement.";
+    }
+    return "You're on the right track! Think about the exact opposite of the statement we want to prove.";
+}
 
-        function proceedWithProof() {
-            buildProofStructure();
-        }
+function getMoreSpecificFeedback(input, problem) {
+    const statementType = document.getElementById('statement-type').value;
+    
+    if (statementType === 'implication') {
+        return `For the statement "${problem.statement}", we need BOTH parts: the hypothesis must be true AND the conclusion must be false. Can you combine both parts?`;
+    } else if (statementType === 'universal') {
+        return `The statement says "all" or "every". To negate it, we need "there exists at least one" counterexample. What would that counterexample be?`;
+    } else if (statementType === 'existence') {
+        return `The statement says "there exists". To negate it, we need "for all" or "none". How would you express that none exist?`;
+    }
+    return `The exact negation of "${problem.statement}" would be to assume the complete opposite. What's the opposite of this claim?`;
+}
 
-        async function challengeAIBuilder() {
-            const input = document.getElementById('builder-alternative-input').value.trim();
-            const feedback = document.getElementById('builder-alternative-feedback');
-            const challengeBtn = document.querySelector('#alternative-section .challenge-btn');
-            
-            if (!input) {
-                feedback.style.display = 'flex';
-                feedback.className = 'feedback-display info';
-                feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
-                return;
-            }
-            
-            challengeBtn.disabled = true;
-            challengeBtn.textContent = 'AI Analyzing...';
-            
-            try {
-                const prompt = `You are a supportive mathematics tutor. The student is learning proof by contradiction and needs to identify what to assume.
+function getInitialGuidance(problem) {
+    const statementType = document.getElementById('statement-type').value;
+    const typeGuidance = {
+        'bare': "For a simple statement P, the negation is just 'not P'. What's the opposite of the given statement?",
+        'implication': "For 'If P then Q', the negation is 'P is true AND Q is false'. Identify both parts.",
+        'universal': "For 'All x have property P', the negation is 'There exists at least one x without property P'.",
+        'existence': "For 'There exists x with property P', the negation is 'All x do NOT have property P'."
+    };
+    return typeGuidance[statementType] || "Think about what would make the original statement false.";
+}
+
+function getStructuredGuidance(problem) {
+    const statementType = document.getElementById('statement-type').value;
+    
+    if (statementType === 'implication' && problem.statement.includes('even')) {
+        return "The statement is 'If n is even, then n² is even'. The negation is: 'n IS even AND n² is NOT even'. Try writing this more concisely.";
+    } else if (statementType === 'bare') {
+        return `If we want to prove "${problem.statement}" by contradiction, we assume the opposite. What's the opposite of this property?`;
+    }
+    return `Look at the structure: "${problem.statement}". The negation has a specific logical form. Try to match that structure.`;
+}
+
+function getStructuredHint() {
+    const feedback = document.getElementById('builder-alternative-feedback');
+    const statementType = document.getElementById('statement-type').value;
+    
+    const hints = {
+        'bare': `<strong>Structured Hint:</strong><br>
+                Statement: ${state.currentProblem.statement}<br>
+                Pattern: To negate P, assume ¬P<br>
+                Think: What's the direct opposite?`,
+        'implication': `<strong>Structured Hint:</strong><br>
+                       Statement: ${state.currentProblem.statement}<br>
+                       Pattern: To negate (P → Q), assume (P ∧ ¬Q)<br>
+                       Think: "The premise holds BUT the conclusion fails"`,
+        'universal': `<strong>Structured Hint:</strong><br>
+                     Statement: ${state.currentProblem.statement}<br>
+                     Pattern: To negate (∀x P(x)), assume (∃x ¬P(x))<br>
+                     Think: "Find one counterexample"`,
+        'existence': `<strong>Structured Hint:</strong><br>
+                     Statement: ${state.currentProblem.statement}<br>
+                     Pattern: To negate (∃x P(x)), assume (∀x ¬P(x))<br>
+                     Think: "None exist" or "All fail to have the property"`
+    };
+    
+    feedback.style.display = 'flex';
+    feedback.className = 'feedback-display info';
+    feedback.innerHTML = `
+        <div class="hint-progression">
+            ${hints[statementType]}
+        </div>
+    `;
+    
+    // Typeset math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([feedback]);
+    }
+}
+
+function showBuilderAnswer() {
+    const feedback = document.getElementById('builder-alternative-feedback');
+    const actionsDiv = document.getElementById('alternative-actions');
+    
+    feedback.className = 'feedback-display success';
+    feedback.innerHTML = `
+        <div class="correct-answer-reveal">
+            <strong>The correct alternative is:</strong><br>
+            "${state.currentProblem.alternative}"<br><br>
+            This is what we assume for proof by contradiction. Now let's construct the proof!
+        </div>
+    `;
+    
+    // Update actions to only show continue
+    actionsDiv.innerHTML = `
+        <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn">Continue to Proof →</button>
+    `;
+    
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([feedback]);
+    }
+}
+
+function proceedWithProof() {
+    buildProofStructure();
+}
+
+async function challengeAIBuilder() {
+    const input = document.getElementById('builder-alternative-input').value.trim();
+    const feedback = document.getElementById('builder-alternative-feedback');
+    const challengeBtn = document.querySelector('.challenge-btn');
+    
+    if (!input) {
+        feedback.style.display = 'flex';
+        feedback.className = 'feedback-display info';
+        feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
+        return;
+    }
+    
+    challengeBtn.disabled = true;
+    challengeBtn.textContent = 'AI Analyzing...';
+    
+    try {
+        const prompt = `You are a supportive mathematics tutor. The student is learning proof by contradiction and needs to identify what to assume.
 
 Original statement to prove: "${state.currentProblem.statement}"
 Student's proposed assumption: "${input}"
@@ -1917,270 +2180,294 @@ Be encouraging and pedagogical. Reference their specific input.
 Keep response to 2-3 sentences maximum.
 End with an encouraging prompt to try again if they're not correct yet.`;
 
-                const response = await callAI(prompt);
-                
-                feedback.style.display = 'flex';
-                
-                // Process response for LaTeX
-                const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
-                    return `$${p1}$`;
-                });
-                
-                feedback.className = 'feedback-display info';
-                feedback.innerHTML = `
-                    <div class="feedback-section">
-                        <strong>AI Feedback:</strong><br>
-                        ${processedResponse}
-                    </div>
-                `;
-                
-                // Typeset math
-                if (window.MathJax && window.MathJax.typesetPromise) {
-                    window.MathJax.typesetPromise([feedback]);
-                }
-                
-            } catch (error) {
-                console.error('AI challenge failed:', error);
-                feedback.style.display = 'flex';
-                feedback.className = 'feedback-display error';
-                feedback.innerHTML = `
-                    <strong>AI temporarily unavailable.</strong><br>
-                    Try using the "Quick Check" button for structured guidance!
-                `;
-            }
+        const response = await callAI(prompt);
+        
+        feedback.style.display = 'flex';
+        
+        // Process response for LaTeX
+        const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
+            return `$${p1}$`;
+        });
+        
+        // Check if response indicates success
+        const isSuccess = response.toLowerCase().includes('correct') && 
+                        (response.toLowerCase().includes('excellent') || 
+                        response.toLowerCase().includes('perfect') ||
+                        response.toLowerCase().includes('exactly right'));
+        
+        if (isSuccess) {
+            feedback.className = 'feedback-display success';
+            feedback.innerHTML = `
+                <div class="feedback-section">
+                    <strong>AI Feedback:</strong><br>
+                    ${processedResponse}
+                </div>
+            `;
             
-            challengeBtn.disabled = false;
-            challengeBtn.textContent = 'Challenge AI';
-        }
-
-        function buildProofStructure() {
-            const construction = document.getElementById('proof-construction');
-            construction.classList.add('active');
-            
-            // Set title
-            const title = state.selectedStrategy === 'contradiction' ?
-                'Step 3: Construct the Proof by Contradiction' :
-                'Step 2: Construct the Direct Proof';
-            document.getElementById('construction-title').textContent = title;
-            
-            // Build structure
-            const structure = document.getElementById('proof-structure');
-            structure.innerHTML = '';
-            
-            if (state.selectedStrategy === 'contradiction') {
-                // Contradiction proof structure: 4 boxes
-                structure.innerHTML = `
-                    <div class="proof-box assumption">
-                        <div class="box-label">Assumption for Contradiction</div>
-                        <div class="statement-display">${state.currentProblem.contradictionProof.assumption}</div>
-                    </div>
-                    
-                    <div class="proof-box steps-container">
-                        <div class="box-label">Proof Steps (arrange in correct order)</div>
-                        <div class="sortable-area" id="steps-area"></div>
-                    </div>
-                    
-                    <div class="proof-box contradiction">
-                        <div class="box-label">Derive Contradiction</div>
-                        <div class="statement-display">${state.currentProblem.contradictionProof.contradiction}</div>
-                    </div>
-                    
-                    <div class="proof-box conclusion">
-                        <div class="box-label">Therefore</div>
-                        <div class="statement-display">${state.currentProblem.statement} ✓</div>
-                    </div>
-                `;
-            } else {
-                // Direct proof structure: 3 boxes
-                structure.innerHTML = `
-                    <div class="proof-box given">
-                        <div class="box-label">Given/Assumption</div>
-                        <div class="statement-display">${state.currentProblem.directProof.assumption}</div>
-                    </div>
-                    
-                    <div class="proof-box steps-container">
-                        <div class="box-label">Proof Steps (arrange in correct order)</div>
-                        <div class="sortable-area" id="steps-area"></div>
-                    </div>
-                    
-                    <div class="proof-box conclusion">
-                        <div class="box-label">Therefore</div>
-                        <div class="statement-display">${state.currentProblem.directProof.conclusion}</div>
-                    </div>
-                `;
-            }
-            
-            // Add steps
-            populateSteps();
-            
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([structure]);
-            }
-        }
-
-        function populateSteps() {
-            const area = document.getElementById('steps-area');
-            if (!area) return;
-            
-            // Store original order
-            state.originalStepsOrder = [...state.currentProblem.steps];
-            
-            // Shuffle steps
-            const shuffled = [...state.currentProblem.steps].sort(() => Math.random() - 0.5);
-            
-            // Create step elements
-            area.innerHTML = '';
-            shuffled.forEach((step, i) => {
-                const div = document.createElement('div');
-                div.className = 'proof-step';
-                div.draggable = true;
-                div.innerHTML = step;
-                div.dataset.originalIndex = state.originalStepsOrder.indexOf(step);
-                
-                // Drag events
-                div.addEventListener('dragstart', handleDragStart);
-                div.addEventListener('dragend', handleDragEnd);
-                div.addEventListener('dragover', handleDragOver);
-                div.addEventListener('drop', handleDrop);
-                
-                area.appendChild(div);
-            });
-            
-            // Typeset math in steps
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([area]);
-            }
-        }
-
-        // Drag and drop handlers
-        function handleDragStart(e) {
-            state.draggedElement = e.target;
-            e.target.classList.add('dragging');
-        }
-
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            const area = document.getElementById('steps-area');
-            const afterElement = getDragAfterElement(area, e.clientY);
-            if (afterElement == null) {
-                area.appendChild(state.draggedElement);
-            } else {
-                area.insertBefore(state.draggedElement, afterElement);
-            }
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-        }
-
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.proof-step:not(.dragging)')];
-            
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        // Check proof
-        function checkProof() {
-            const steps = document.querySelectorAll('#steps-area .proof-step');
-            let correct = true;
-            
-            steps.forEach((step, i) => {
-                const originalIndex = parseInt(step.dataset.originalIndex);
-                if (originalIndex === i) {
-                    step.classList.add('correct');
-                } else {
-                    step.classList.remove('correct');
-                    correct = false;
-                }
-            });
-            
-            const feedback = document.getElementById('proof-feedback');
-            feedback.style.display = 'flex';
-            
-            if (correct) {
-                feedback.className = 'feedback-display success';
-                feedback.innerHTML = '<strong>Perfect!</strong> Your proof is logically correct!';
-                showCompleteProof();
-            } else {
-                feedback.className = 'feedback-display info';
-                feedback.innerHTML = 'Not quite right. Green steps are correctly placed. Keep trying!';
-            }
-        }
-
-        // Show complete proof
-        function showCompleteProof() {
-            const completeProof = document.getElementById('complete-proof');
-            const content = document.getElementById('proof-content');
-            
-            let html = `<p><strong>Theorem:</strong> ${state.currentProblem.statement}</p>`;
-            
-            if (state.selectedStrategy === 'contradiction') {
-                html += `<p><strong>Proof by Contradiction:</strong></p>`;
-                html += `<p>${state.currentProblem.contradictionProof.assumption}</p>`;
-                state.currentProblem.steps.forEach(step => {
-                    html += `<p>${step}</p>`;
-                });
-                html += `<p>${state.currentProblem.contradictionProof.contradiction}</p>`;
-                html += `<p>Therefore, ${state.currentProblem.statement}.</p>`;
-            } else {
-                html += `<p><strong>Direct Proof:</strong></p>`;
-                html += `<p>${state.currentProblem.directProof.assumption}</p>`;
-                state.currentProblem.steps.forEach(step => {
-                    html += `<p>${step}</p>`;
-                });
-                html += `<p>${state.currentProblem.directProof.conclusion}</p>`;
-            }
-            
-            html += '<div class="qed">∎</div>';
-            
-            content.innerHTML = html;
-            completeProof.classList.add('active');
-            
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([content]);
-            }
-        }
-
-        // Reset proof
-        function resetProof() {
-            populateSteps();
-            document.querySelectorAll('.proof-step').forEach(step => {
-                step.classList.remove('correct');
-            });
-            document.getElementById('proof-feedback').style.display = 'none';
-            document.getElementById('complete-proof').classList.remove('active');
-        }
-
-        // Show hint
-        function showHint() {
-            const feedback = document.getElementById('proof-feedback');
-            feedback.style.display = 'flex';
+            // Update actions for success
+            const actionsDiv = document.getElementById('alternative-actions');
+            actionsDiv.innerHTML = `
+                <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn">Continue to Proof →</button>
+            `;
+        } else {
             feedback.className = 'feedback-display info';
-            feedback.innerHTML = `<strong>💡 Hint:</strong> ${state.currentProblem.hint}`;
-            
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedback]);
-            }
+            feedback.innerHTML = `
+                <div class="feedback-section">
+                    <strong>AI Feedback:</strong><br>
+                    ${processedResponse}
+                </div>
+                <div class="attempt-counter">AI consulted after ${state.attemptCounts.builder} attempts</div>
+            `;
         }
+        
+        // Typeset math
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([feedback]);
+        }
+        
+    } catch (error) {
+        console.error('AI challenge failed:', error);
+        feedback.style.display = 'flex';
+        feedback.className = 'feedback-display error';
+        feedback.innerHTML = `
+            <strong>AI temporarily unavailable.</strong><br>
+            Try using the "Get Hint" button for structured guidance, or keep trying on your own!
+        `;
+    }
+    
+    challengeBtn.disabled = false;
+    challengeBtn.textContent = 'Challenge AI';
+}
 
-        // Initialize the app
-        init();
+// Proof Construction Functions
+function buildProofStructure() {
+    const construction = document.getElementById('proof-construction');
+    construction.classList.add('active');
+    
+    // Set title
+    const title = state.selectedStrategy === 'contradiction' ?
+        'Step 3: Construct the Proof by Contradiction' :
+        'Step 2: Construct the Direct Proof';
+    document.getElementById('construction-title').textContent = title;
+    
+    // Build structure
+    const structure = document.getElementById('proof-structure');
+    structure.innerHTML = '';
+    
+    if (state.selectedStrategy === 'contradiction') {
+        // Contradiction proof structure: 4 boxes
+        structure.innerHTML = `
+            <div class="proof-box assumption">
+                <div class="box-label">Assumption for Contradiction</div>
+                <div class="statement-display">${state.currentProblem.contradictionProof.assumption}</div>
+            </div>
+            
+            <div class="proof-box steps-container">
+                <div class="box-label">Proof Steps (arrange in correct order)</div>
+                <div class="sortable-area" id="steps-area"></div>
+            </div>
+            
+            <div class="proof-box contradiction">
+                <div class="box-label">Derive Contradiction</div>
+                <div class="statement-display">${state.currentProblem.contradictionProof.contradiction}</div>
+            </div>
+            
+            <div class="proof-box conclusion">
+                <div class="box-label">Therefore</div>
+                <div class="statement-display">${state.currentProblem.statement} ✓</div>
+            </div>
+        `;
+    } else {
+        // Direct proof structure: 3 boxes
+        structure.innerHTML = `
+            <div class="proof-box given">
+                <div class="box-label">Given/Assumption</div>
+                <div class="statement-display">${state.currentProblem.directProof.assumption}</div>
+            </div>
+            
+            <div class="proof-box steps-container">
+                <div class="box-label">Proof Steps (arrange in correct order)</div>
+                <div class="sortable-area" id="steps-area"></div>
+            </div>
+            
+            <div class="proof-box conclusion">
+                <div class="box-label">Therefore</div>
+                <div class="statement-display">${state.currentProblem.directProof.conclusion}</div>
+            </div>
+        `;
+    }
+    
+    // Add steps
+    populateSteps();
+    
+    // Typeset math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([structure]);
+    }
+}
+
+function populateSteps() {
+    const area = document.getElementById('steps-area');
+    if (!area) return;
+    
+    // Store original order
+    state.originalStepsOrder = [...state.currentProblem.steps];
+    
+    // Shuffle steps
+    const shuffled = [...state.currentProblem.steps].sort(() => Math.random() - 0.5);
+    
+    // Create step elements
+    area.innerHTML = '';
+    shuffled.forEach((step, i) => {
+        const div = document.createElement('div');
+        div.className = 'proof-step';
+        div.draggable = true;
+        div.innerHTML = step;
+        div.dataset.originalIndex = state.originalStepsOrder.indexOf(step);
+        
+        // Drag events
+        div.addEventListener('dragstart', handleDragStart);
+        div.addEventListener('dragend', handleDragEnd);
+        div.addEventListener('dragover', handleDragOver);
+        div.addEventListener('drop', handleDrop);
+        
+        area.appendChild(div);
+    });
+    
+    // Typeset math in steps
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([area]);
+    }
+}
+
+// Drag and drop handlers
+function handleDragStart(e) {
+    state.draggedElement = e.target;
+    e.target.classList.add('dragging');
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    const area = document.getElementById('steps-area');
+    const afterElement = getDragAfterElement(area, e.clientY);
+    if (afterElement == null) {
+        area.appendChild(state.draggedElement);
+    } else {
+        area.insertBefore(state.draggedElement, afterElement);
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.proof-step:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Check proof
+function checkProof() {
+    const steps = document.querySelectorAll('#steps-area .proof-step');
+    let correct = true;
+    
+    steps.forEach((step, i) => {
+        const originalIndex = parseInt(step.dataset.originalIndex);
+        if (originalIndex === i) {
+            step.classList.add('correct');
+        } else {
+            step.classList.remove('correct');
+            correct = false;
+        }
+    });
+    
+    const feedback = document.getElementById('proof-feedback');
+    feedback.style.display = 'flex';
+    
+    if (correct) {
+        feedback.className = 'feedback-display success';
+        feedback.innerHTML = '<strong>Perfect!</strong> Your proof is logically correct!';
+        showCompleteProof();
+    } else {
+        feedback.className = 'feedback-display info';
+        feedback.innerHTML = 'Not quite right. Green steps are correctly placed. Keep trying!';
+    }
+}
+
+// Show complete proof
+function showCompleteProof() {
+    const completeProof = document.getElementById('complete-proof');
+    const content = document.getElementById('proof-content');
+    
+    let html = `<p><strong>Theorem:</strong> ${state.currentProblem.statement}</p>`;
+    
+    if (state.selectedStrategy === 'contradiction') {
+        html += `<p><strong>Proof by Contradiction:</strong></p>`;
+        html += `<p>${state.currentProblem.contradictionProof.assumption}</p>`;
+        state.currentProblem.steps.forEach(step => {
+            html += `<p>${step}</p>`;
+        });
+        html += `<p>${state.currentProblem.contradictionProof.contradiction}</p>`;
+        html += `<p>Therefore, ${state.currentProblem.statement}.</p>`;
+    } else {
+        html += `<p><strong>Direct Proof:</strong></p>`;
+        html += `<p>${state.currentProblem.directProof.assumption}</p>`;
+        state.currentProblem.steps.forEach(step => {
+            html += `<p>${step}</p>`;
+        });
+        html += `<p>${state.currentProblem.directProof.conclusion}</p>`;
+    }
+    
+    html += '<div class="qed">∎</div>';
+    
+    content.innerHTML = html;
+    completeProof.classList.add('active');
+    
+    // Typeset math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([content]);
+    }
+}
+
+// Reset proof
+function resetProof() {
+    populateSteps();
+    document.querySelectorAll('.proof-step').forEach(step => {
+        step.classList.remove('correct');
+    });
+    document.getElementById('proof-feedback').style.display = 'none';
+    document.getElementById('complete-proof').classList.remove('active');
+}
+
+// Show hint
+function showHint() {
+    const feedback = document.getElementById('proof-feedback');
+    feedback.style.display = 'flex';
+    feedback.className = 'feedback-display info';
+    feedback.innerHTML = `<strong>💡 Hint:</strong> ${state.currentProblem.hint}`;
+    
+    // Typeset math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([feedback]);
+    }
+}
+
+// Initialize the app
+document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
