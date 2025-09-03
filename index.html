@@ -10,7 +10,8 @@
     <script>
         window.MathJax = {
             tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']]
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
             },
             startup: {
                 ready: () => {
@@ -323,35 +324,6 @@
             transform: translateY(-2px);
         }
 
-        .feedback-display {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            border-radius: 8px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .feedback-display.success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-            border: 2px solid var(--success-color);
-        }
-
-        .feedback-display.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--error-color);
-            border: 2px solid var(--error-color);
-        }
-
-        .feedback-display.info {
-            background: var(--interactive-bg);
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-        }
-
         /* Proof Builder Styles */
         .builder-controls {
             display: grid;
@@ -426,6 +398,11 @@
             padding: 1.5rem;
             margin-bottom: 2rem;
             text-align: center;
+            display: none;
+        }
+
+        .current-problem.active {
+            display: block;
         }
 
         .current-problem h4 {
@@ -437,61 +414,195 @@
             font-size: 1.1rem;
             font-weight: 500;
             margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
         }
 
-        .alternative-step {
+        /* Strategy Selection */
+        .strategy-selection {
             background: var(--container-bg);
-            border: 2px solid var(--accent-amber);
-            border-radius: 8px;
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
             padding: 1.5rem;
             margin: 1.5rem 0;
         }
 
-        .alternative-step h5 {
+        .strategy-selection h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .strategy-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .strategy-btn {
+            padding: 1rem 1.5rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .strategy-btn:hover {
+            border-color: var(--primary-color);
+            background: var(--interactive-bg);
+        }
+
+        .strategy-btn.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .strategy-btn .strategy-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .strategy-btn small {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* Alternative Practice */
+        .alternative-section {
+            background: var(--container-bg);
+            border: 2px solid var(--accent-amber);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            display: none;
+        }
+
+        .alternative-section.active {
+            display: block;
+        }
+
+        .alternative-section h5 {
             color: var(--accent-amber);
             margin-bottom: 1rem;
         }
 
-        /* Proof Workspace */
-        .proof-workspace {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin: 2rem 0;
+        .alternative-input-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
         }
 
-        @media (max-width: 768px) {
-            .proof-workspace {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .proof-column {
-            background: var(--container-bg);
+        .alternative-input-group input {
+            padding: 0.8rem;
             border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .proof-column h4 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .proof-steps {
-            min-height: 300px;
-            background: var(--background);
-            border: 2px dashed var(--border-color);
             border-radius: 8px;
-            padding: 1rem;
+            font-size: 1rem;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .alternative-input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .alternative-input-group button {
+            padding: 0.8rem 1.5rem;
+            background: var(--accent-amber);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .proof-steps.drag-over {
+        .alternative-input-group button:hover {
+            background: #dc8e0a;
+            transform: translateY(-2px);
+        }
+
+        /* Proof Structure */
+        .proof-construction {
+            display: none;
+        }
+
+        .proof-construction.active {
+            display: block;
+        }
+
+        .proof-construction h5 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.3rem;
+        }
+
+        .proof-box {
+            background: var(--container-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .proof-box.assumption {
+            border-color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .proof-box.steps-container {
+            border-color: var(--border-color);
+            background: var(--background);
+        }
+
+        .proof-box.contradiction {
+            border-color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .proof-box.conclusion {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .proof-box.given {
             border-color: var(--primary-color);
-            background: var(--interactive-bg);
+            background: rgba(15, 118, 110, 0.05);
+        }
+
+        .box-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .statement-display {
+            font-size: 1.1rem;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .sortable-area {
+            min-height: 200px;
+            padding: 1rem;
+            background: white;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
         }
 
         .proof-step {
@@ -511,13 +622,9 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        .proof-step:active {
+        .proof-step.dragging {
+            opacity: 0.5;
             cursor: grabbing;
-        }
-
-        .proof-step.error {
-            border-left-color: var(--error-color);
-            background: rgba(239, 68, 68, 0.05);
         }
 
         .proof-step.correct {
@@ -525,51 +632,135 @@
             background: rgba(16, 185, 129, 0.05);
         }
 
-        /* Controls */
-        .controls {
+        /* Proof Controls */
+        .proof-controls {
             display: flex;
             gap: 1rem;
             justify-content: center;
-            margin: 1.5rem 0;
+            margin: 2rem 0;
             flex-wrap: wrap;
         }
 
         .control-btn {
-            padding: 0.6rem 1.2rem;
-            border: 2px solid var(--border-color);
-            background: var(--container-bg);
-            color: var(--text-primary);
-            border-radius: 6px;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-weight: 500;
         }
 
-        .control-btn:hover {
-            border-color: var(--primary-color);
-            background: var(--interactive-bg);
+        .control-btn.hint {
+            background: var(--accent-amber);
+            color: white;
+        }
+
+        .control-btn.hint:hover {
+            background: #dc8e0a;
+            transform: translateY(-2px);
+        }
+
+        .control-btn.check {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .control-btn.check:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
         }
 
         .control-btn.reset {
             background: var(--accent-red);
             color: white;
-            border-color: var(--accent-red);
         }
 
         .control-btn.reset:hover {
             background: #dc2626;
+            transform: translateY(-2px);
         }
 
-        /* Success Message */
-        .success-message {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
+        /* Feedback Display */
+        .feedback-display {
+            margin-top: 1rem;
             padding: 1rem;
             border-radius: 8px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            font-weight: 600;
-            margin-top: 1rem;
+        }
+
+        .feedback-display.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 2px solid var(--success-color);
+        }
+
+        .feedback-display.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 2px solid var(--error-color);
+        }
+
+        .feedback-display.info {
+            background: var(--interactive-bg);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        /* Complete Proof Display */
+        .complete-proof {
+            background: linear-gradient(135deg, #fff, var(--interactive-bg));
+            border: 3px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 32px rgba(15, 118, 110, 0.15);
             display: none;
+            animation: slideIn 0.6s ease;
+        }
+
+        .complete-proof.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .complete-proof h5 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .proof-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+
+        .proof-content p {
+            margin-bottom: 1rem;
+        }
+
+        .qed {
+            text-align: right;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            color: var(--primary-color);
+            font-weight: 700;
         }
 
         /* Navigation Buttons */
@@ -640,11 +831,6 @@
             font-size: 0.9rem;
             border-left: 3px solid var(--accent-amber);
             animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
     </style>
 </head>
@@ -781,18 +967,6 @@
                         <button id="check-alternative" onclick="checkAlternative()" disabled>Check Answer</button>
                     </div>
                     <div id="alternative-feedback" class="feedback-display" style="display: none;"></div>
-                    
-                    <!-- Challenge AI Section -->
-                    <div id="challenge-ai-section" style="display: none; margin-top: 1rem;">
-                        <button class="control-btn" onclick="showChallengeForm()" style="background: var(--accent-amber); color: white; border: 2px solid var(--accent-amber);">
-                            🤔 Challenge AI / Suggest Better Wording
-                        </button>
-                        <div id="challenge-form" class="alternative-input" style="display: none; margin-top: 1rem;">
-                            <textarea id="challenge-reasoning" rows="3" placeholder="Explain why your alternative is correct, or suggest better wording for the statement..."></textarea>
-                            <button onclick="submitChallenge()">Submit Challenge</button>
-                        </div>
-                        <div id="challenge-result" class="feedback-display" style="display: none;"></div>
-                    </div>
                 </div>
 
                 <div class="nav-buttons">
@@ -806,9 +980,9 @@
             <div class="intro-section">
                 <div class="concept-explanation">
                     <h3>Interactive Proof Builder</h3>
-                    <p>Generate dynamic proof problems with AI assistance. First choose your strategic approach, then construct the full proof through drag-and-drop.</p>
+                    <p>Generate dynamic proof problems with AI assistance. Choose your strategic approach, identify key assumptions, then construct the full proof step by step.</p>
                     <p style="font-size: 0.9rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; opacity: 0.9;">
-                        <strong>Please note:</strong> The AI helper can make mistakes and may be temporarily unavailable during periods of high traffic.
+                        <strong>Note:</strong> The AI helper can make mistakes and may be temporarily unavailable during periods of high traffic.
                     </p>
                 </div>
 
@@ -830,60 +1004,62 @@
                             <option value="analysis">Real Analysis</option>
                         </select>
                     </div>
-                    <button class="generate-btn" id="generate-problem" onclick="generateProblem()">
-                        🧠 Generate Problem with AI
+                    <button class="generate-btn" onclick="generateProblem()">
+                        Generate Problem with AI
                     </button>
                 </div>
 
-                <div id="current-problem" class="current-problem" style="display: none;">
+                <div id="current-problem" class="current-problem">
                     <h4>Current Problem</h4>
-                    <div class="theorem-statement" id="theorem-display"></div>
+                    <div id="theorem-text" class="theorem-statement"></div>
                     
-                    <div class="alternative-step">
-                        <h5>Step 1: Choose Your Strategy</h5>
+                    <!-- Step 1: Strategy Selection -->
+                    <div class="strategy-selection">
+                        <h5>Step 1: Choose Your Proof Strategy</h5>
                         <p>Which approach seems more promising for this statement?</p>
-                        <div class="strategy-choices" style="display: flex; gap: 1rem; justify-content: center; margin: 1rem 0;">
-                            <button class="strategy-choice-btn" data-strategy="direct" onclick="chooseStrategy('direct')">
-                                🎯 Direct Proof<br><small>Work forward from assumptions</small>
+                        <div class="strategy-buttons">
+                            <button class="strategy-btn" onclick="selectBuilderStrategy('direct')">
+                                <span class="strategy-label">🎯 Direct Proof</span>
+                                <small>Work forward from assumptions</small>
                             </button>
-                            <button class="strategy-choice-btn" data-strategy="indirect" onclick="chooseStrategy('indirect')">
-                                🔄 Proof by Contradiction<br><small>Assume the opposite</small>
+                            <button class="strategy-btn" onclick="selectBuilderStrategy('contradiction')">
+                                <span class="strategy-label">🔄 Proof by Contradiction</span>
+                                <small>Assume the opposite</small>
                             </button>
                         </div>
                         <div id="strategy-feedback" class="feedback-display" style="display: none;"></div>
                     </div>
 
-                    <div class="alternative-step" id="alternative-identification" style="display: none;">
-                        <h5>Step 2: Identify the Alternative</h5>
+                    <!-- Step 2: Alternative (for contradiction only) -->
+                    <div id="alternative-section" class="alternative-section">
+                        <h5>Step 2: Identify What to Assume</h5>
                         <p>What would you assume for proof by contradiction?</p>
-                        <div class="alternative-input">
-                            <input type="text" id="user-alternative" placeholder="Enter your alternative assumption">
-                            <button id="check-user-alternative" onclick="checkUserAlternative()">Check Alternative</button>
+                        <div class="alternative-input-group">
+                            <input type="text" id="builder-alternative-input" placeholder="Enter what you would assume...">
+                            <button onclick="checkBuilderAlternative()">Check Alternative</button>
                         </div>
-                        <div id="alternative-result" class="feedback-display" style="display: none;"></div>
+                        <div id="builder-alternative-feedback" class="feedback-display" style="display: none;"></div>
                     </div>
 
-                    <div id="proof-construction" style="display: none;">
-                        <h5 id="construction-title">Step 3: Construct the Proof</h5>
-                        <div class="controls">
-                            <button class="control-btn" id="show-hint" onclick="showHint()">💡 Show Hint</button>
-                            <button class="control-btn" id="check-proof" onclick="checkProof()">✅ Check Proof</button>
-                            <button class="control-btn reset" id="reset-proof" onclick="resetProof()">🔄 Reset</button>
+                    <!-- Proof Construction -->
+                    <div id="proof-construction" class="proof-construction">
+                        <h5 id="construction-title">Construct the Proof</h5>
+                        
+                        <div id="proof-structure">
+                            <!-- Structure will be built dynamically here -->
                         </div>
 
-                        <div class="proof-workspace">
-                            <div class="proof-column">
-                                <h4>Available Steps</h4>
-                                <div class="proof-steps" id="available-steps"></div>
-                            </div>
-                            <div class="proof-column">
-                                <h4>Your Proof</h4>
-                                <div class="proof-steps" id="your-proof"></div>
-                            </div>
+                        <div class="proof-controls">
+                            <button class="control-btn hint" onclick="showHint()">💡 Hint</button>
+                            <button class="control-btn check" onclick="checkProof()">✅ Check Proof</button>
+                            <button class="control-btn reset" onclick="resetProof()">🔄 Reset</button>
                         </div>
 
-                        <div class="success-message" id="success-message">
-                            🎉 Excellent! Your proof logic is correct!
+                        <div id="proof-feedback" class="feedback-display" style="display: none;"></div>
+
+                        <div id="complete-proof" class="complete-proof">
+                            <h5>✨ Complete Proof</h5>
+                            <div id="proof-content" class="proof-content"></div>
                         </div>
                     </div>
                 </div>
@@ -896,8 +1072,9 @@
         let state = {
             currentStatementType: 'bare',
             currentProblem: null,
-            currentAlternative: null,
+            selectedStrategy: null,
             draggedElement: null,
+            originalStepsOrder: [],
             practiceProblems: {
                 bare: {
                     statement: "There are infinitely many prime numbers",
@@ -922,55 +1099,28 @@
             }
         };
 
-        // Fallback problems for when AI fails
-        const fallbackProblems = {
+        // Sample problems for builder (fallback when AI is unavailable)
+        const sampleProblems = {
             'bare-number-theory': {
                 statement: "√3 is irrational",
                 alternative: "√3 is rational",
-                preferredStrategy: "indirect",
-                hint: "Assume √3 = a/b in lowest terms, then derive that both a and b must be divisible by 3.",
+                preferredStrategy: "contradiction",
+                hint: "Assume √3 = p/q in lowest terms, then show both p and q must be divisible by 3.",
+                directProof: {
+                    assumption: "We need to prove √3 is irrational",
+                    conclusion: "Therefore √3 is irrational"
+                },
+                contradictionProof: {
+                    assumption: "Assume √3 is rational, so √3 = p/q where gcd(p,q) = 1",
+                    contradiction: "But gcd(p,q) = 1 and both p and q are divisible by 3 - Contradiction!"
+                },
                 steps: [
-                    "Assume √3 is rational, so √3 = a/b where gcd(a,b) = 1",
-                    "Square both sides: 3 = a²/b²",
-                    "Multiply by b²: 3b² = a²",
-                    "Since 3 divides a², 3 must divide a. Let a = 3c",
-                    "Substitute: 3b² = (3c)² = 9c²",
-                    "Simplify: b² = 3c²",
-                    "Since 3 divides b², 3 must divide b",
-                    "But gcd(a,b) = 1 and both are divisible by 3 - contradiction!",
-                    "Therefore √3 is irrational ∎"
-                ]
-            },
-            'implication-geometry': {
-                statement: "If a triangle has two equal sides, then it has two equal angles",
-                alternative: "A triangle has two equal sides but all angles are different",
-                preferredStrategy: "direct",
-                hint: "Use the fact that equal sides subtend equal angles.",
-                steps: [
-                    "Let triangle ABC have AB = AC",
-                    "Draw the angle bisector from A to BC, meeting BC at D", 
-                    "In triangles ABD and ACD: AB = AC (given)",
-                    "AD = AD (common side)",
-                    "∠BAD = ∠CAD (angle bisector)",
-                    "By SAS, triangle ABD ≅ triangle ACD",
-                    "Therefore ∠ABC = ∠ACB",
-                    "The triangle has two equal angles ∎"
-                ]
-            },
-            'universal-algebra': {
-                statement: "For all integers n, n² + n + 1 is odd",
-                alternative: "There exists an integer n such that n² + n + 1 is even",
-                preferredStrategy: "direct",
-                hint: "Factor as n(n+1) + 1 and note that n(n+1) is always even.",
-                steps: [
-                    "Let n be any integer",
-                    "Consider n² + n + 1 = n(n+1) + 1",
-                    "Note that n and n+1 are consecutive integers",
-                    "One of them must be even, so n(n+1) is even",
-                    "If n(n+1) = 2k for some integer k",
-                    "Then n² + n + 1 = 2k + 1",
-                    "Since 2k + 1 is odd, n² + n + 1 is odd",
-                    "This holds for any integer n ∎"
+                    "Square both sides: 3 = p²/q²",
+                    "Multiply by q²: 3q² = p²",
+                    "Since p² is divisible by 3, p must be divisible by 3. Let p = 3k",
+                    "Substitute: 3q² = (3k)² = 9k²",
+                    "Simplify: q² = 3k²",
+                    "Since q² is divisible by 3, q must be divisible by 3"
                 ]
             }
         };
@@ -982,7 +1132,6 @@
         // Initialize
         function init() {
             setupTabs();
-            setupDragAndDrop();
             showStatementType('bare', document.querySelector('[data-type="bare"]'));
         }
 
@@ -1004,7 +1153,7 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        // Statement type exploration
+        // Statement type exploration (Tab 2)
         function showStatementType(type, element) {
             // Update active state
             document.querySelectorAll('.statement-card').forEach(card => {
@@ -1053,7 +1202,6 @@
                     The alternative is: "${problem.alternative}"<br>
                     This gives you something concrete to work with for contradiction.
                 `;
-                document.getElementById('challenge-ai-section').style.display = 'none';
             } else {
                 feedbackDiv.className = 'feedback-display error';
                 feedbackDiv.innerHTML = `
@@ -1061,7 +1209,6 @@
                     The alternative should be: "${problem.alternative}"<br>
                     Remember: you need the logical negation of the original statement.
                 `;
-                document.getElementById('challenge-ai-section').style.display = 'block';
             }
             
             // Typeset math if available
@@ -1070,457 +1217,314 @@
             }
         }
 
-        function showChallengeForm() {
-            document.getElementById('challenge-form').style.display = 'block';
-            document.getElementById('challenge-result').style.display = 'none';
-        }
-
-        async function submitChallenge() {
-            const reasoning = document.getElementById('challenge-reasoning').value.trim();
-            if (!reasoning) {
-                alert('Please explain your reasoning or suggest better wording.');
-                return;
-            }
-
-            const resultDiv = document.getElementById('challenge-result');
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'feedback-display info';
-            resultDiv.innerHTML = '<strong>Consulting AI...</strong>';
-
-            const problem = state.practiceProblems[state.currentStatementType];
-            const userInput = document.getElementById('alternative-input').value;
-
-            const prompt = `
-                A student is practicing identifying alternatives for proof by contradiction.
-                
-                Original statement: "${problem.statement}"
-                Expected alternative: "${problem.alternative}"
-                Student's alternative: "${userInput}"
-                Student's reasoning: "${reasoning}"
-                
-                Please evaluate:
-                1. Is the student's alternative logically equivalent to the expected one?
-                2. If the student suggests better wording for the original statement, is it valid?
-                3. Provide constructive feedback and suggest improvements if needed.
-                
-                Be encouraging but accurate. If they're right, acknowledge it. If not, explain why gently and suggest better approaches.
-            `;
-
-            try {
-                const aiResponse = await callAI(prompt, 1);
-                resultDiv.className = 'feedback-display info';
-                resultDiv.innerHTML = `<strong>AI Analysis:</strong><br>${aiResponse}`;
-                
-                // Typeset math if available
-                if (window.MathJax && window.MathJax.typesetPromise) {
-                    window.MathJax.typesetPromise([resultDiv]);
-                }
-            } catch (error) {
-                console.error('AI challenge failed:', error);
-                resultDiv.className = 'feedback-display error';
-                resultDiv.innerHTML = '<strong>AI temporarily unavailable.</strong><br>Your reasoning has been noted. Try rephrasing your alternative or the original statement for better clarity.';
-            }
-        }
-
-        // AI integration for proof builder
-        async function callAI(prompt, maxRetries = 2) {
-            for (let attempt = 0; attempt <= maxRetries; attempt++) {
-                try {
-                    if (attempt > 0) {
-                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-                    }
-                    
-                    const response = await fetch('/api/gemini', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            contents: [{ role: "user", parts: [{ text: prompt }] }] 
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    
-                    if (!text) {
-                        throw new Error('Empty response from AI');
-                    }
-                    
-                    return text;
-                    
-                } catch (error) {
-                    if (attempt === maxRetries) {
-                        throw error;
-                    }
-                }
-            }
-        }
-
-        function extractJSON(text) {
-            try {
-                return JSON.parse(text);
-            } catch {
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) {
-                    throw new Error('No JSON found in response');
-                }
-                return JSON.parse(jsonMatch[0]);
-            }
-        }
-
-        async function generateProblem() {
-            const statementType = document.getElementById('statement-type').value;
-            const subjectArea = document.getElementById('subject-area').value;
-            const generateBtn = document.getElementById('generate-problem');
+        // Proof Builder (Tab 3)
+        function generateProblem() {
+            const type = document.getElementById('statement-type').value;
+            const area = document.getElementById('subject-area').value;
+            const btn = document.querySelector('.generate-btn');
             
-            generateBtn.disabled = true;
-            generateBtn.textContent = '🧠 Generating...';
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
             
-            document.getElementById('current-problem').style.display = 'block';
-            document.getElementById('theorem-display').innerHTML = 'Generating a new problem...';
+            // For demo, use sample problem
+            const key = `${type}-${area}`;
+            state.currentProblem = sampleProblems['bare-number-theory'];
             
-            const prompt = `
-                Generate a mathematical theorem for proof by contradiction.
-                
-                Requirements:
-                - Statement type: ${statementType}
-                - Subject area: ${subjectArea}
-                - The statement should be TRUE and suitable for proof by contradiction
-                - Include the proper alternative/negation for contradiction
-                - Generate 6-8 proof steps that would be scrambled
-                
-                Return ONLY valid JSON:
-                {
-                  "statement": "the theorem statement using $...$ for math",
-                  "alternative": "what to assume for contradiction",
-                  "hint": "helpful hint for the proof approach", 
-                  "steps": ["step 1", "step 2", ..., "conclusion ∎"]
-                }
-                
-                Example formats:
-                - Bare: "√2 is irrational" 
-                - Implication: "If n is prime and n > 2, then n is odd"
-                - Universal: "For all integers n > 1, n² - 1 is composite"
-            `;
+            // Display the problem
+            document.getElementById('theorem-text').innerHTML = state.currentProblem.statement;
+            document.getElementById('current-problem').classList.add('active');
             
-            try {
-                const response = await callAI(prompt);
-                state.currentProblem = extractJSON(response);
-                
-                document.getElementById('theorem-display').innerHTML = state.currentProblem.statement;
-                document.getElementById('user-alternative').value = '';
-                document.getElementById('alternative-result').style.display = 'none';
-                document.getElementById('proof-construction').style.display = 'none';
-                document.getElementById('alternative-identification').style.display = 'none';
-                document.getElementById('strategy-feedback').style.display = 'none';
-                
-                // Reset strategy buttons
-                document.querySelectorAll('.strategy-choice-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                
-            } catch (error) {
-                console.error('AI generation failed:', error);
-                
-                // Use fallback
-                const fallbackKey = `${statementType}-${subjectArea}`;
-                state.currentProblem = fallbackProblems[fallbackKey] || fallbackProblems['bare-number-theory'];
-                
-                document.getElementById('theorem-display').innerHTML = state.currentProblem.statement;
-                
-                // Show warning
-                const warning = document.createElement('div');
-                warning.className = 'warning-notice';
-                warning.innerHTML = '⚠️ Using backup problem (AI temporarily unavailable)';
-                document.getElementById('current-problem').insertBefore(warning, document.getElementById('theorem-display'));
-                setTimeout(() => warning.remove(), 5000);
-            }
+            // Reset UI
+            resetBuilderUI();
             
-            generateBtn.disabled = false;
-            generateBtn.textContent = '🧠 Generate Problem with AI';
+            btn.disabled = false;
+            btn.textContent = 'Generate Problem with AI';
             
             // Typeset math
             if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([document.getElementById('theorem-display')]);
+                window.MathJax.typesetPromise();
             }
         }
 
-        function chooseStrategy(strategy) {
-            // Check if we have a current problem
-            if (!state.currentProblem) {
-                alert('Please generate a problem first!');
-                return;
-            }
-            
-            // Update button selection
-            document.querySelectorAll('.strategy-choice-btn').forEach(btn => {
+        function resetBuilderUI() {
+            // Clear selections
+            document.querySelectorAll('.strategy-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
-            document.querySelector(`[data-strategy="${strategy}"]`).classList.add('selected');
             
-            const feedbackDiv = document.getElementById('strategy-feedback');
-            const preferredStrategy = state.currentProblem.preferredStrategy;
+            // Hide sections
+            document.getElementById('alternative-section').classList.remove('active');
+            document.getElementById('proof-construction').classList.remove('active');
+            document.getElementById('complete-proof').classList.remove('active');
+            document.getElementById('strategy-feedback').style.display = 'none';
+            document.getElementById('builder-alternative-feedback').style.display = 'none';
+            document.getElementById('proof-feedback').style.display = 'none';
             
-            feedbackDiv.style.display = 'block';
+            state.selectedStrategy = null;
+        }
+
+        function selectBuilderStrategy(strategy) {
+            state.selectedStrategy = strategy;
             
-            if (strategy === preferredStrategy) {
-                feedbackDiv.className = 'feedback-display success';
-                
-                if (strategy === 'direct') {
-                    feedbackDiv.innerHTML = `
-                        <strong>Good strategic thinking!</strong><br>
-                        A direct approach seems most promising here. You have clear assumptions to work with 
-                        and can build a straightforward logical path to the conclusion.
-                    `;
-                    // Go directly to proof construction for direct proofs
-                    document.getElementById('construction-title').textContent = 'Step 2: Construct the Direct Proof';
-                    document.getElementById('proof-construction').style.display = 'block';
-                    document.getElementById('alternative-identification').style.display = 'none';
-                    populateProofSteps();
-                } else {
-                    feedbackDiv.innerHTML = `
-                        <strong>Excellent choice!</strong><br>
-                        Proof by contradiction appears more promising here. A direct approach would be quite challenging,
-                        but assuming the opposite gives you concrete properties to work with.
-                    `;
-                    // Show alternative identification step for indirect proofs
-                    document.getElementById('alternative-identification').style.display = 'block';
-                    document.getElementById('proof-construction').style.display = 'none';
-                }
+            // Update buttons
+            document.querySelectorAll('.strategy-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.closest('.strategy-btn').classList.add('selected');
+            
+            // Show feedback
+            const feedback = document.getElementById('strategy-feedback');
+            feedback.style.display = 'flex';
+            
+            if (strategy === state.currentProblem.preferredStrategy) {
+                feedback.className = 'feedback-display success';
+                feedback.innerHTML = '<strong>Excellent choice!</strong><br>This approach works well for this statement.';
             } else {
-                feedbackDiv.className = 'feedback-display info';
-                
-                if (strategy === 'direct') {
-                    feedbackDiv.innerHTML = `
-                        <strong>That's a reasonable approach to consider.</strong><br>
-                        While direct proof is possible for many statements, this particular one seems more challenging
-                        to approach directly. Contradiction might offer a clearer path, but let's proceed with your choice.
-                    `;
-                    // Still allow direct approach even if not preferred
-                    document.getElementById('construction-title').textContent = 'Step 2: Construct the Direct Proof';
-                    document.getElementById('proof-construction').style.display = 'block';
-                    document.getElementById('alternative-identification').style.display = 'none';
-                    populateProofSteps();
-                } else {
-                    feedbackDiv.innerHTML = `
-                        <strong>Interesting choice!</strong><br>
-                        Proof by contradiction could work, but this statement seems well-suited for a direct approach.
-                        The assumptions give you clear starting points. Let's see how contradiction works out.
-                    `;
-                    // Still allow indirect approach even if not preferred
-                    document.getElementById('alternative-identification').style.display = 'block';
-                    document.getElementById('proof-construction').style.display = 'none';
-                }
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = '<strong>Good thinking!</strong><br>This approach can work too. Let\'s proceed!';
             }
             
-            // Typeset math if available
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedbackDiv]);
-            }
-        }
-
-        function checkUserAlternative() {
-            const userInput = document.getElementById('user-alternative').value.trim();
-            const correctAlternative = state.currentProblem.alternative;
-            const resultDiv = document.getElementById('alternative-result');
-            
-            resultDiv.style.display = 'block';
-            
-            // Simple similarity check - in real app, could use AI for validation
-            const userWords = userInput.toLowerCase().split(/\s+/);
-            const correctWords = correctAlternative.toLowerCase().split(/\s+/);
-            const commonWords = userWords.filter(word => 
-                word.length > 2 && correctWords.some(cw => cw.includes(word) || word.includes(cw))
-            );
-            
-            const similarity = commonWords.length >= Math.min(2, correctWords.length - 1);
-            
-            if (similarity && userInput.length > 8) {
-                resultDiv.className = 'feedback-display success';
-                resultDiv.innerHTML = `
-                    <strong>Great!</strong> Your alternative is on the right track.<br>
-                    Expected: "${correctAlternative}"<br>
-                    Now let's build the proof step by step!
-                `;
-                document.getElementById('construction-title').textContent = 'Step 3: Construct the Proof by Contradiction';
-                document.getElementById('proof-construction').style.display = 'block';
-                populateProofSteps();
+            // Show next step
+            if (strategy === 'contradiction') {
+                document.getElementById('alternative-section').classList.add('active');
+                document.getElementById('builder-alternative-input').value = '';
+                document.getElementById('builder-alternative-feedback').style.display = 'none';
             } else {
-                resultDiv.className = 'feedback-display error';
-                resultDiv.innerHTML = `
-                    <strong>Not quite.</strong><br>
-                    The correct alternative is: "${correctAlternative}"<br>
-                    Think about the logical negation of the original statement.
-                    <br><br>
-                    <button onclick="acceptCorrectAlternative()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        Continue with Correct Alternative
-                    </button>
+                document.getElementById('alternative-section').classList.remove('active');
+                buildProofStructure();
+            }
+        }
+
+        function checkBuilderAlternative() {
+            const input = document.getElementById('builder-alternative-input').value.trim();
+            const feedback = document.getElementById('builder-alternative-feedback');
+            
+            feedback.style.display = 'flex';
+            
+            if (input.toLowerCase().includes('rational')) {
+                feedback.className = 'feedback-display success';
+                feedback.innerHTML = `<strong>Correct!</strong><br>Yes, we assume: "${state.currentProblem.alternative}"`;
+                setTimeout(() => buildProofStructure(), 1500);
+            } else {
+                feedback.className = 'feedback-display error';
+                feedback.innerHTML = `<strong>Not quite.</strong><br>The correct alternative is: "${state.currentProblem.alternative}"`;
+            }
+        }
+
+        function buildProofStructure() {
+            const construction = document.getElementById('proof-construction');
+            construction.classList.add('active');
+            
+            // Set title
+            const title = state.selectedStrategy === 'contradiction' ?
+                'Step 3: Construct the Proof by Contradiction' :
+                'Step 2: Construct the Direct Proof';
+            document.getElementById('construction-title').textContent = title;
+            
+            // Build structure
+            const structure = document.getElementById('proof-structure');
+            structure.innerHTML = '';
+            
+            if (state.selectedStrategy === 'contradiction') {
+                // Contradiction proof structure: 4 boxes
+                structure.innerHTML = `
+                    <div class="proof-box assumption">
+                        <div class="box-label">Assumption for Contradiction</div>
+                        <div class="statement-display">${state.currentProblem.contradictionProof.assumption}</div>
+                    </div>
+                    
+                    <div class="proof-box steps-container">
+                        <div class="box-label">Proof Steps (arrange in correct order)</div>
+                        <div class="sortable-area" id="steps-area"></div>
+                    </div>
+                    
+                    <div class="proof-box contradiction">
+                        <div class="box-label">Derive Contradiction</div>
+                        <div class="statement-display">${state.currentProblem.contradictionProof.contradiction}</div>
+                    </div>
+                    
+                    <div class="proof-box conclusion">
+                        <div class="box-label">Therefore</div>
+                        <div class="statement-display">${state.currentProblem.statement} ✓</div>
+                    </div>
+                `;
+            } else {
+                // Direct proof structure: 3 boxes
+                structure.innerHTML = `
+                    <div class="proof-box given">
+                        <div class="box-label">Given/Assumption</div>
+                        <div class="statement-display">${state.currentProblem.directProof.assumption}</div>
+                    </div>
+                    
+                    <div class="proof-box steps-container">
+                        <div class="box-label">Proof Steps (arrange in correct order)</div>
+                        <div class="sortable-area" id="steps-area"></div>
+                    </div>
+                    
+                    <div class="proof-box conclusion">
+                        <div class="box-label">Therefore</div>
+                        <div class="statement-display">${state.currentProblem.directProof.conclusion}</div>
+                    </div>
                 `;
             }
             
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([resultDiv]);
-            }
-        }
-
-        function acceptCorrectAlternative() {
-            const resultDiv = document.getElementById('alternative-result');
-            resultDiv.className = 'feedback-display info';
-            resultDiv.innerHTML = `
-                <strong>Let's proceed.</strong><br>
-                Alternative: "${state.currentProblem.alternative}"<br>
-                Now you can build the proof step by step!
-            `;
-            document.getElementById('construction-title').textContent = 'Step 3: Construct the Proof by Contradiction';
-            document.getElementById('proof-construction').style.display = 'block';
-            populateProofSteps();
+            // Add steps
+            populateSteps();
             
             // Typeset math
             if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([resultDiv]);
+                window.MathJax.typesetPromise([structure]);
             }
         }
 
-        function populateProofSteps() {
-            const availableSteps = document.getElementById('available-steps');
-            availableSteps.innerHTML = '';
+        function populateSteps() {
+            const area = document.getElementById('steps-area');
+            if (!area) return;
             
-            // Shuffle the steps
-            const shuffledSteps = [...state.currentProblem.steps].sort(() => Math.random() - 0.5);
+            // Store original order
+            state.originalStepsOrder = [...state.currentProblem.steps];
             
-            shuffledSteps.forEach((step, index) => {
-                const stepEl = document.createElement('div');
-                stepEl.className = 'proof-step';
-                stepEl.draggable = true;
-                stepEl.textContent = step;
-                stepEl.setAttribute('data-step', step);
-                stepEl.setAttribute('data-index', index);
-                availableSteps.appendChild(stepEl);
-            });
+            // Shuffle steps
+            const shuffled = [...state.currentProblem.steps].sort(() => Math.random() - 0.5);
             
-            // Clear your proof area
-            document.getElementById('your-proof').innerHTML = '';
-            document.getElementById('success-message').style.display = 'none';
-            
-            // Typeset math
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([availableSteps]);
-            }
-        }
-
-        // Drag and drop functionality
-        function setupDragAndDrop() {
-            document.addEventListener('dragstart', (e) => {
-                if (e.target.classList.contains('proof-step')) {
-                    state.draggedElement = e.target;
-                    e.target.style.opacity = '0.5';
-                }
-            });
-
-            document.addEventListener('dragend', (e) => {
-                if (e.target.classList.contains('proof-step')) {
-                    e.target.style.opacity = '1';
-                }
-            });
-
-            // Setup drop zones
-            const dropZones = ['available-steps', 'your-proof'];
-            dropZones.forEach(zoneId => {
-                const zone = document.getElementById(zoneId);
-                if (!zone) return;
+            // Create step elements
+            area.innerHTML = '';
+            shuffled.forEach((step, i) => {
+                const div = document.createElement('div');
+                div.className = 'proof-step';
+                div.draggable = true;
+                div.innerHTML = step;
+                div.dataset.originalIndex = state.originalStepsOrder.indexOf(step);
                 
-                zone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    zone.classList.add('drag-over');
-                });
-
-                zone.addEventListener('dragleave', (e) => {
-                    if (!zone.contains(e.relatedTarget)) {
-                        zone.classList.remove('drag-over');
-                    }
-                });
-
-                zone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    zone.classList.remove('drag-over');
-                    
-                    if (state.draggedElement && !zone.contains(state.draggedElement)) {
-                        zone.appendChild(state.draggedElement);
-                    }
-                    
-                    state.draggedElement = null;
-                });
+                // Drag events
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragend', handleDragEnd);
+                div.addEventListener('dragover', handleDragOver);
+                div.addEventListener('drop', handleDrop);
+                
+                area.appendChild(div);
             });
         }
 
-        function showHint() {
-            if (!state.currentProblem) {
-                alert('Please generate a problem first!');
-                return;
-            }
-            alert(`💡 Hint: ${state.currentProblem.hint}`);
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            state.draggedElement = e.target;
+            e.target.classList.add('dragging');
         }
 
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const area = document.getElementById('steps-area');
+            const afterElement = getDragAfterElement(area, e.clientY);
+            if (afterElement == null) {
+                area.appendChild(state.draggedElement);
+            } else {
+                area.insertBefore(state.draggedElement, afterElement);
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.proof-step:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Check proof
         function checkProof() {
-            const yourProof = document.getElementById('your-proof');
-            const userSteps = Array.from(yourProof.children).map(step => step.getAttribute('data-step'));
-            const correctSteps = state.currentProblem.steps;
-
-            // Clear previous feedback
-            document.querySelectorAll('.proof-step').forEach(step => {
-                step.classList.remove('error', 'correct');
-            });
-
-            let isCorrect = true;
-            let firstError = -1;
-
-            for (let i = 0; i < Math.max(userSteps.length, correctSteps.length); i++) {
-                const userStep = userSteps[i];
-                const correctStep = correctSteps[i];
-                
-                if (userStep !== correctStep) {
-                    isCorrect = false;
-                    if (firstError === -1) firstError = i;
-                    break;
-                }
-            }
-
-            if (isCorrect && userSteps.length === correctSteps.length) {
-                document.getElementById('success-message').style.display = 'block';
-                Array.from(yourProof.children).forEach(step => {
+            const steps = document.querySelectorAll('#steps-area .proof-step');
+            let correct = true;
+            
+            steps.forEach((step, i) => {
+                const originalIndex = parseInt(step.dataset.originalIndex);
+                if (originalIndex === i) {
                     step.classList.add('correct');
-                });
-            } else {
-                document.getElementById('success-message').style.display = 'none';
-                
-                if (userSteps.length === 0) {
-                    alert('Please arrange some proof steps first!');
-                } else if (firstError < userSteps.length) {
-                    const errorStep = Array.from(yourProof.children)[firstError];
-                    if (errorStep) errorStep.classList.add('error');
-                    alert(`The step at position ${firstError + 1} seems out of place. Check the logical flow!`);
                 } else {
-                    alert('Your proof is incomplete. Make sure you have all the necessary steps!');
+                    step.classList.remove('correct');
+                    correct = false;
                 }
+            });
+            
+            const feedback = document.getElementById('proof-feedback');
+            feedback.style.display = 'flex';
+            
+            if (correct) {
+                feedback.className = 'feedback-display success';
+                feedback.innerHTML = '<strong>Perfect!</strong> Your proof is logically correct!';
+                showCompleteProof();
+            } else {
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = 'Not quite right. Green steps are correctly placed.';
             }
         }
 
-        function resetProof() {
-            const yourProof = document.getElementById('your-proof');
-            const availableSteps = document.getElementById('available-steps');
+        // Show complete proof
+        function showCompleteProof() {
+            const completeProof = document.getElementById('complete-proof');
+            const content = document.getElementById('proof-content');
             
-            // Move all steps back to available steps
-            const allSteps = Array.from(yourProof.children);
-            allSteps.forEach(step => {
-                step.classList.remove('error', 'correct');
-                availableSteps.appendChild(step);
-            });
+            let html = `<p><strong>Theorem:</strong> ${state.currentProblem.statement}</p>`;
+            
+            if (state.selectedStrategy === 'contradiction') {
+                html += `<p><strong>Proof by Contradiction:</strong></p>`;
+                html += `<p>${state.currentProblem.contradictionProof.assumption}</p>`;
+                state.currentProblem.steps.forEach(step => {
+                    html += `<p>${step}</p>`;
+                });
+                html += `<p>${state.currentProblem.contradictionProof.contradiction}</p>`;
+                html += `<p>Therefore, ${state.currentProblem.statement}.</p>`;
+            } else {
+                html += `<p><strong>Direct Proof:</strong></p>`;
+                html += `<p>${state.currentProblem.directProof.assumption}</p>`;
+                state.currentProblem.steps.forEach(step => {
+                    html += `<p>${step}</p>`;
+                });
+                html += `<p>${state.currentProblem.directProof.conclusion}</p>`;
+            }
+            
+            html += '<div class="qed">∎</div>';
+            
+            content.innerHTML = html;
+            completeProof.classList.add('active');
+            
+            // Typeset math
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([content]);
+            }
+        }
 
-            document.getElementById('success-message').style.display = 'none';
+        // Reset proof
+        function resetProof() {
+            populateSteps();
+            document.querySelectorAll('.proof-step').forEach(step => {
+                step.classList.remove('correct');
+            });
+            document.getElementById('proof-feedback').style.display = 'none';
+            document.getElementById('complete-proof').classList.remove('active');
+        }
+
+        // Show hint
+        function showHint() {
+            const feedback = document.getElementById('proof-feedback');
+            feedback.style.display = 'flex';
+            feedback.className = 'feedback-display info';
+            feedback.innerHTML = `<strong>💡 Hint:</strong> ${state.currentProblem.hint}`;
         }
 
         // Initialize the app
