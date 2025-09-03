@@ -307,6 +307,13 @@
             border-color: var(--primary-color);
         }
 
+        .check-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .alternative-input button {
             padding: 0.8rem 2rem;
             background: var(--primary-color);
@@ -319,12 +326,26 @@
             transition: all 0.3s ease;
         }
 
-        .alternative-input button:hover {
+        .alternative-input button:hover:not(:disabled) {
             background: var(--primary-light);
             transform: translateY(-2px);
         }
 
-        /* Proof Builder Styles */
+        .alternative-input button:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .challenge-btn {
+            background: var(--accent-amber) !important;
+        }
+
+        .challenge-btn:hover:not(:disabled) {
+            background: #dc8e0a !important;
+        }
+
+        /* Builder Controls Styles */
         .builder-controls {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -507,7 +528,7 @@
             border-radius: 8px;
             font-size: 1rem;
             flex: 1;
-            max-width: 400px;
+            max-width: 300px;
         }
 
         .alternative-input-group input:focus {
@@ -517,18 +538,33 @@
 
         .alternative-input-group button {
             padding: 0.8rem 1.5rem;
-            background: var(--accent-amber);
+            background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            min-width: 120px;
         }
 
-        .alternative-input-group button:hover {
-            background: #dc8e0a;
+        .alternative-input-group button:hover:not(:disabled) {
+            background: var(--primary-light);
             transform: translateY(-2px);
+        }
+
+        .alternative-input-group button:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alternative-input-group .challenge-btn {
+            background: var(--accent-amber) !important;
+        }
+
+        .alternative-input-group .challenge-btn:hover:not(:disabled) {
+            background: #dc8e0a !important;
         }
 
         /* Proof Structure */
@@ -964,7 +1000,10 @@
                     </div>
                     <div class="alternative-input">
                         <input type="text" id="alternative-input" placeholder="What would you assume for contradiction?" disabled>
-                        <button id="check-alternative" onclick="checkAlternative()" disabled>Check Answer</button>
+                        <div class="check-options">
+                            <button id="check-alternative" onclick="checkAlternative()" disabled>Quick Check</button>
+                            <button id="challenge-ai" onclick="challengeAI()" disabled class="challenge-btn">Challenge AI</button>
+                        </div>
                     </div>
                     <div id="alternative-feedback" class="feedback-display" style="display: none;"></div>
                 </div>
@@ -1036,7 +1075,8 @@
                         <p>What would you assume for proof by contradiction?</p>
                         <div class="alternative-input-group">
                             <input type="text" id="builder-alternative-input" placeholder="Enter what you would assume...">
-                            <button onclick="checkBuilderAlternative()">Check Alternative</button>
+                            <button onclick="checkBuilderAlternative()">Quick Check</button>
+                            <button onclick="challengeAIBuilder()" class="challenge-btn">Challenge AI</button>
                         </div>
                         <div id="builder-alternative-feedback" class="feedback-display" style="display: none;"></div>
                     </div>
@@ -1077,24 +1117,24 @@
             originalStepsOrder: [],
             practiceProblems: {
                 bare: {
-                    statement: "There are infinitely many prime numbers",
-                    alternative: "There are finitely many prime numbers",
-                    variations: ["there are only finitely many primes", "assume finitely many primes", "primes are finite"]
+                    statement: "√2 is irrational",
+                    alternative: "√2 is rational",
+                    variations: ["sqrt 2 is rational", "assume √2 rational", "root 2 is rational", "square root of 2 is rational"]
                 },
                 implication: {
-                    statement: "If a² + b² = c², then we have a Pythagorean triple",
-                    alternative: "a² + b² = c² but it's not a Pythagorean triple",
-                    variations: ["a² + b² = c² and not pythagorean", "assume a²+b²=c² but not triple"]
+                    statement: "If n is even, then n² is even",
+                    alternative: "n is even but n² is odd",
+                    variations: ["n even and n² odd", "n is even but n squared is odd", "assume n even but n² not even", "n even and n² not even"]
                 },
                 universal: {
-                    statement: "Every even number greater than 2 is composite",
-                    alternative: "There exists an even number greater than 2 that is prime", 
-                    variations: ["some even number > 2 is prime", "find even prime > 2"]
+                    statement: "Every prime number greater than 2 is odd",
+                    alternative: "There exists a prime number greater than 2 that is even", 
+                    variations: ["some prime > 2 is even", "find an even prime > 2", "exists even prime greater than 2", "some prime greater than 2 is even"]
                 },
                 existence: {
-                    statement: "There exists a real number x such that x² = 2",
-                    alternative: "For all real numbers x, x² ≠ 2",
-                    variations: ["no real x satisfies x²=2", "assume no real square root of 2"]
+                    statement: "There exists an irrational number",
+                    alternative: "All numbers are rational",
+                    variations: ["no irrational numbers exist", "assume all numbers rational", "every number is rational", "no numbers are irrational"]
                 }
             }
         };
@@ -1168,8 +1208,10 @@
                 <strong>Practice Statement:</strong> ${problem.statement}
             `;
             
+            // Enable both buttons
             document.getElementById('alternative-input').disabled = false;
             document.getElementById('check-alternative').disabled = false;
+            document.getElementById('challenge-ai').disabled = false;
             document.getElementById('alternative-input').placeholder = "What would you assume for contradiction?";
             document.getElementById('alternative-input').value = "";
             document.getElementById('alternative-feedback').style.display = 'none';
@@ -1189,27 +1231,165 @@
             const feedbackDiv = document.getElementById('alternative-feedback');
             feedbackDiv.style.display = 'block';
             
-            const isCorrect = userInput.includes(correctAlternative.split(' ')[0]) || 
-                             variations.some(variation => 
-                                 userInput.includes(variation) || 
-                                 variation.includes(userInput.substring(0, 10))
-                             );
+            // More flexible checking
+            let isCorrect = false;
+            let isPartiallyCorrect = false;
+            let feedback = '';
             
+            if (userInput === '') {
+                feedbackDiv.className = 'feedback-display info';
+                feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
+                return;
+            }
+            
+            // Check for exact or close matches
+            const normalizedInput = userInput.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            const normalizedCorrect = correctAlternative.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            if (normalizedInput === normalizedCorrect || 
+                variations.some(v => normalizedInput.includes(v.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()))) {
+                isCorrect = true;
+            }
+            
+            // Check for partial understanding based on statement type
+            else if (state.currentStatementType === 'implication') {
+                if (userInput.includes('but') || userInput.includes('and') || userInput.includes('however')) {
+                    if (userInput.includes('not') || userInput.includes('odd')) {
+                        isPartiallyCorrect = true;
+                        feedback = "You're on the right track! For an implication P→Q, the negation is 'P is true AND Q is false'. Try to be more specific about both parts.";
+                    }
+                }
+            }
+            else if (state.currentStatementType === 'universal') {
+                if (userInput.includes('exists') || userInput.includes('some') || userInput.includes('find')) {
+                    isPartiallyCorrect = true;
+                    feedback = "Good! You recognize that the negation of 'all' is 'some' or 'exists'. Can you be more specific about what we're looking for?";
+                }
+            }
+            else if (state.currentStatementType === 'existence') {
+                if (userInput.includes('all') || userInput.includes('no') || userInput.includes('every')) {
+                    isPartiallyCorrect = true;
+                    feedback = "Right direction! The negation of 'there exists' is 'for all' or 'none'. Try to complete the statement.";
+                }
+            }
+            else if (state.currentStatementType === 'bare') {
+                if (userInput.includes('rational') || userInput.includes('finite') || userInput.includes('opposite')) {
+                    isPartiallyCorrect = true;
+                    feedback = "You're thinking about the opposite, which is good! Can you state it more precisely?";
+                }
+            }
+            
+            // Display appropriate feedback
             if (isCorrect) {
                 feedbackDiv.className = 'feedback-display success';
                 feedbackDiv.innerHTML = `
-                    <strong>Correct!</strong><br>
+                    <strong>Excellent!</strong><br>
                     The alternative is: "${problem.alternative}"<br>
                     This gives you something concrete to work with for contradiction.
                 `;
+            } else if (isPartiallyCorrect) {
+                feedbackDiv.className = 'feedback-display info';
+                feedbackDiv.innerHTML = `
+                    <strong>You're getting closer!</strong><br>
+                    ${feedback}<br>
+                    <small>The complete alternative is: "${problem.alternative}"</small>
+                `;
             } else {
+                feedbackDiv.className = 'feedback-display info';
+                feedbackDiv.innerHTML = getHelpfulHint(state.currentStatementType, problem);
+            }
+            
+            // Typeset math if available
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([feedbackDiv]);
+            }
+        }
+        
+        function getHelpfulHint(type, problem) {
+            const hints = {
+                'bare': `<strong>Think step by step:</strong><br>
+                        To negate "${problem.statement}", consider: what would be the opposite?<br>
+                        <small>Hint: If something is irrational, its opposite would be...?</small>`,
+                        
+                'implication': `<strong>For if-then statements:</strong><br>
+                               To negate "If P, then Q", you need "P is true AND Q is false"<br>
+                               <small>Think: "${problem.statement.split(',')[0]}" is true, but the conclusion fails.</small>`,
+                               
+                'universal': `<strong>For "all" statements:</strong><br>
+                             To negate "For all x, P(x)", you need "There exists some x where P(x) is false"<br>
+                             <small>What specific counterexample would you look for?</small>`,
+                             
+                'existence': `<strong>For "there exists" statements:</strong><br>
+                             To negate "There exists x such that P(x)", you need "For all x, P(x) is false"<br>
+                             <small>You're saying no such thing exists anywhere.</small>`
+            };
+            
+            return hints[type] || 'Try thinking about what the logical opposite would be.';
+        }
+
+        async function challengeAI() {
+            const userInput = document.getElementById('alternative-input').value.trim();
+            const problem = state.practiceProblems[state.currentStatementType];
+            const feedbackDiv = document.getElementById('alternative-feedback');
+            const challengeBtn = document.getElementById('challenge-ai');
+            
+            if (userInput === '') {
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.className = 'feedback-display info';
+                feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
+                return;
+            }
+            
+            challengeBtn.disabled = true;
+            challengeBtn.textContent = 'AI Analyzing...';
+            
+            try {
+                const typeExplanations = {
+                    'bare': 'a bare statement (just P)',
+                    'implication': 'an implication statement (if P then Q)',
+                    'universal': 'a universal statement (for all x, P(x))',
+                    'existence': 'an existence statement (there exists x such that P(x))'
+                };
+                
+                const prompt = `You are helping a student learn mathematical proof strategies, specifically about identifying the correct negation for proof by contradiction.
+
+Statement type: ${typeExplanations[state.currentStatementType]}
+Original statement: "${problem.statement}"
+Student's proposed alternative: "${userInput}"
+Correct alternative: "${problem.alternative}"
+
+Analyze the student's answer and provide educational feedback. Your response should:
+
+1. First, acknowledge what the student got right (if anything)
+2. Identify what's missing or incorrect (be specific but kind)
+3. Explain the logical structure behind the negation for this statement type
+4. Guide them toward the complete correct answer
+5. End with encouragement
+
+Be conversational, educational, and supportive. Focus on helping them understand the underlying logic, not just memorizing the right answer.
+
+If their answer is completely correct, celebrate that! If it's partially correct, build on what they understand. If it's incorrect, guide them step by step.
+
+Keep your response concise (2-3 sentences maximum) but helpful.`;
+
+                const response = await callAI(prompt);
+                
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.className = 'feedback-display info';
+                feedbackDiv.innerHTML = `<strong>AI Feedback:</strong><br>${response}`;
+                
+            } catch (error) {
+                console.error('AI challenge failed:', error);
+                feedbackDiv.style.display = 'block';
                 feedbackDiv.className = 'feedback-display error';
                 feedbackDiv.innerHTML = `
-                    <strong>Not quite.</strong><br>
-                    The alternative should be: "${problem.alternative}"<br>
-                    Remember: you need the logical negation of the original statement.
+                    <strong>AI temporarily unavailable.</strong><br>
+                    ${getHelpfulHint(state.currentStatementType, problem)}
                 `;
             }
+            
+            challengeBtn.disabled = false;
+            challengeBtn.textContent = 'Challenge AI';
             
             // Typeset math if available
             if (window.MathJax && window.MathJax.typesetPromise) {
@@ -1486,16 +1666,105 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
             const input = document.getElementById('builder-alternative-input').value.trim();
             const feedback = document.getElementById('builder-alternative-feedback');
             
+            if (!input) {
+                feedback.style.display = 'flex';
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
+                return;
+            }
+            
             feedback.style.display = 'flex';
             
-            if (input.toLowerCase().includes('rational')) {
+            // More flexible checking for generated problems
+            const inputLower = input.toLowerCase();
+            const correctLower = state.currentProblem.alternative.toLowerCase();
+            
+            // Check for key concepts based on problem type
+            let isCorrect = false;
+            let isPartial = false;
+            let hint = '';
+            
+            if (inputLower.includes('rational') && correctLower.includes('rational')) {
+                isCorrect = true;
+            } else if (inputLower.includes('assume') && (inputLower.includes('rational') || inputLower.includes('finite'))) {
+                isPartial = true;
+                hint = "You have the right idea about assuming the opposite! Try to be more precise.";
+            } else {
+                hint = "Remember: for proof by contradiction, you assume the negation of what you want to prove.";
+            }
+            
+            if (isCorrect) {
                 feedback.className = 'feedback-display success';
                 feedback.innerHTML = `<strong>Correct!</strong><br>Yes, we assume: "${state.currentProblem.alternative}"`;
                 setTimeout(() => buildProofStructure(), 1500);
+            } else if (isPartial) {
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = `<strong>Getting closer!</strong><br>${hint}<br><small>The complete alternative is: "${state.currentProblem.alternative}"</small>`;
             } else {
-                feedback.className = 'feedback-display error';
-                feedback.innerHTML = `<strong>Not quite.</strong><br>The correct alternative is: "${state.currentProblem.alternative}"`;
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = `<strong>Think about the logical negation:</strong><br>${hint}<br><small>The correct alternative is: "${state.currentProblem.alternative}"</small>`;
             }
+        }
+
+        async function challengeAIBuilder() {
+            const input = document.getElementById('builder-alternative-input').value.trim();
+            const feedback = document.getElementById('builder-alternative-feedback');
+            const challengeBtn = event.target;
+            
+            if (!input) {
+                feedback.style.display = 'flex';
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
+                return;
+            }
+            
+            challengeBtn.disabled = true;
+            challengeBtn.textContent = 'AI Analyzing...';
+            
+            try {
+                const prompt = `You are helping a student learn proof by contradiction. They need to identify what to assume for contradiction.
+
+Original statement to prove: "${state.currentProblem.statement}"
+Student's proposed assumption: "${input}"
+Correct assumption for contradiction: "${state.currentProblem.alternative}"
+
+Analyze their answer and provide helpful feedback:
+
+1. Acknowledge what they got right (if anything)
+2. Explain what's missing or needs correction (be specific but supportive)
+3. Help them understand the logical structure of negation for this type of statement
+4. Guide them toward the complete answer
+5. Keep it encouraging and educational
+
+Be conversational and focus on helping them learn the underlying logic. If they're completely right, celebrate! If partially right, build on their understanding. If incorrect, guide them step by step.
+
+Limit your response to 2-3 sentences maximum.`;
+
+                const response = await callAI(prompt);
+                
+                feedback.style.display = 'flex';
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = `<strong>AI Feedback:</strong><br>${response}`;
+                
+                // If the AI feedback suggests they understand the concept, allow progression
+                if (response.toLowerCase().includes('correct') || response.toLowerCase().includes('excellent') || 
+                    response.toLowerCase().includes('perfect')) {
+                    setTimeout(() => buildProofStructure(), 2000);
+                }
+                
+            } catch (error) {
+                console.error('AI challenge failed:', error);
+                feedback.style.display = 'flex';
+                feedback.className = 'feedback-display error';
+                feedback.innerHTML = `
+                    <strong>AI temporarily unavailable.</strong><br>
+                    Remember: you need the logical negation of "${state.currentProblem.statement}"<br>
+                    <small>The correct alternative is: "${state.currentProblem.alternative}"</small>
+                `;
+            }
+            
+            challengeBtn.disabled = false;
+            challengeBtn.textContent = 'Challenge AI';
         }
 
         function buildProofStructure() {
