@@ -1879,7 +1879,7 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
         async function challengeAIBuilder() {
             const input = document.getElementById('builder-alternative-input').value.trim();
             const feedback = document.getElementById('builder-alternative-feedback');
-            const challengeBtn = event.target;
+            const challengeBtn = document.querySelector('#alternative-section .challenge-btn');
             
             if (!input) {
                 feedback.style.display = 'flex';
@@ -1891,66 +1891,48 @@ RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
             challengeBtn.disabled = true;
             challengeBtn.textContent = 'AI Analyzing...';
             
-            state.attemptCounts.builder++;
-            
             try {
                 const prompt = `You are a supportive mathematics tutor. The student is learning proof by contradiction and needs to identify what to assume.
 
 Original statement to prove: "${state.currentProblem.statement}"
 Student's proposed assumption: "${input}"
 Correct assumption for contradiction: "${state.currentProblem.alternative}"
+Attempt number: ${state.attemptCounts.builder}
 
 Analyze their answer and provide guided feedback:
 
 If completely correct: Celebrate their understanding!
 If partially correct (has key ideas but not complete): 
-- Acknowledge what they got right
+- Acknowledge what they got right specifically
 - Give ONE specific hint about what's missing WITHOUT revealing the answer
-- Offer them the option to try again
+- Encourage them to modify their answer and try again
 
 If incorrect:
-- Give an encouraging hint about the logical structure
-- Guide them toward understanding WITHOUT giving the answer
-- After 2+ attempts, you may offer more specific guidance
+- Acknowledge their effort
+- Give a hint about the logical structure without giving the answer
+- Focus on one specific aspect they should think about
 
 Use $ for LaTeX math notation where appropriate.
-Be encouraging and pedagogical. Help them learn, don't just give answers.
-Keep response to 2-3 sentences. End with a question if they should try again.`;
+Be encouraging and pedagogical. Reference their specific input.
+Keep response to 2-3 sentences maximum.
+End with an encouraging prompt to try again if they're not correct yet.`;
 
                 const response = await callAI(prompt);
                 
                 feedback.style.display = 'flex';
-                feedback.className = 'feedback-display info';
                 
                 // Process response for LaTeX
                 const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
                     return `$${p1}$`;
                 });
                 
-                let html = `
+                feedback.className = 'feedback-display info';
+                feedback.innerHTML = `
                     <div class="feedback-section">
                         <strong>AI Feedback:</strong><br>
                         ${processedResponse}
                     </div>
                 `;
-                
-                // Check if response indicates success
-                const isSuccess = response.toLowerCase().includes('correct') || 
-                                response.toLowerCase().includes('excellent') || 
-                                response.toLowerCase().includes('perfect') ||
-                                response.toLowerCase().includes('exactly right');
-                
-                if (isSuccess) {
-                    setTimeout(() => buildProofStructure(), 2000);
-                } else if (state.attemptCounts.builder >= 2) {
-                    html += `
-                        <div class="hint-progression">
-                            <button class="show-answer-btn" onclick="showBuilderAnswer()">Show Answer</button>
-                        </div>
-                    `;
-                }
-                
-                feedback.innerHTML = html;
                 
                 // Typeset math
                 if (window.MathJax && window.MathJax.typesetPromise) {
@@ -1963,34 +1945,12 @@ Keep response to 2-3 sentences. End with a question if they should try again.`;
                 feedback.className = 'feedback-display error';
                 feedback.innerHTML = `
                     <strong>AI temporarily unavailable.</strong><br>
-                    Remember: you need the logical negation of "${state.currentProblem.statement}"<br>
-                    <small>The correct alternative is: "${state.currentProblem.alternative}"</small>
+                    Try using the "Quick Check" button for structured guidance!
                 `;
-                
-                if (window.MathJax && window.MathJax.typesetPromise) {
-                    window.MathJax.typesetPromise([feedback]);
-                }
             }
             
             challengeBtn.disabled = false;
             challengeBtn.textContent = 'Challenge AI';
-        }
-
-        function showBuilderAnswer() {
-            const feedback = document.getElementById('builder-alternative-feedback');
-            feedback.className = 'feedback-display success';
-            feedback.innerHTML = `
-                <div class="correct-answer-reveal">
-                    <strong>The correct alternative is:</strong><br>
-                    "${state.currentProblem.alternative}"<br><br>
-                    Now let's construct the proof!
-                    <button class="nav-btn" onclick="buildProofStructure()">Continue →</button>
-                </div>
-            `;
-            
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise([feedback]);
-            }
         }
 
         function buildProofStructure() {
