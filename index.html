@@ -1217,8 +1217,105 @@
             }
         }
 
+        // AI API integration
+        async function callAI(prompt, maxRetries = 2) {
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    if (attempt > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                    }
+                    
+                    const response = await fetch('/api/gemini', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            contents: [{ role: "user", parts: [{ text: prompt }] }] 
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    if (!text) {
+                        throw new Error('Empty response from AI');
+                    }
+                    
+                    return text;
+                    
+                } catch (error) {
+                    console.error(`AI attempt ${attempt + 1} failed:`, error);
+                    if (attempt === maxRetries) {
+                        throw error;
+                    }
+                }
+            }
+        }
+
+        function extractJSON(text) {
+            try {
+                // Try direct JSON parse first
+                return JSON.parse(text);
+            } catch {
+                // Try to find JSON in the response
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('No JSON found in response');
+                }
+                
+                const cleaned = jsonMatch[0]
+                    .replace(/```json\s*/g, '')
+                    .replace(/```\s*/g, '')
+                    .trim();
+                
+                try {
+                    return JSON.parse(cleaned);
+                } catch (e) {
+                    throw new Error('Invalid JSON format');
+                }
+            }
+        }
+
+        function validateProblem(data) {
+            // Validate required fields
+            const required = [
+                'statement', 
+                'alternative', 
+                'preferredStrategy', 
+                'hint', 
+                'directProof', 
+                'contradictionProof', 
+                'steps'
+            ];
+            
+            for (const field of required) {
+                if (!(field in data)) {
+                    throw new Error(`Missing required field: ${field}`);
+                }
+            }
+            
+            // Validate nested fields
+            if (!data.directProof.assumption || !data.directProof.conclusion) {
+                throw new Error('Missing direct proof fields');
+            }
+            
+            if (!data.contradictionProof.assumption || !data.contradictionProof.contradiction) {
+                throw new Error('Missing contradiction proof fields');
+            }
+            
+            // Validate steps is an array with at least 3 elements
+            if (!Array.isArray(data.steps) || data.steps.length < 3) {
+                throw new Error('Steps must be an array with at least 3 elements');
+            }
+            
+            return data;
+        }
+
         // Proof Builder (Tab 3)
-        function generateProblem() {
+        async function generateProblem() {
             const type = document.getElementById('statement-type').value;
             const area = document.getElementById('subject-area').value;
             const btn = document.querySelector('.generate-btn');
@@ -1226,9 +1323,99 @@
             btn.disabled = true;
             btn.textContent = 'Generating...';
             
-            // For demo, use sample problem
+            // Build the key from user's selection
             const key = `${type}-${area}`;
-            state.currentProblem = sampleProblems['bare-number-theory'];
+            
+            // Try AI generation first
+            try {
+                const typeDescriptions = {
+                    'bare': 'a simple statement P (like "√2 is irrational")',
+                    'implication': 'an if-then statement P→Q (like "if n is even, then n² is even")',
+                    'universal': 'a universal statement ∀x P(x) (like "for all integers n, n² ≥ 0")'
+                };
+                
+                const areaDescriptions = {
+                    'number-theory': 'number theory (integers, primes, divisibility, rational/irrational numbers)',
+                    'geometry': 'geometry (triangles, circles, angles, areas)',
+                    'algebra': 'algebra (equations, inequalities, polynomials)',
+                    'analysis': 'real analysis (limits, continuity, sequences, convergence)'
+                };
+                
+                const prompt = `Generate a mathematical proof problem.
+                
+Statement type: ${typeDescriptions[type]}
+Subject area: ${areaDescriptions[area]}
+
+The statement should be TRUE and suitable for proof. Create a problem that's interesting but not too complex.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "statement": "The mathematical statement to prove (use $ for inline LaTeX math)",
+  "alternative": "What to assume for proof by contradiction (the negation of the statement)",
+  "preferredStrategy": "direct" or "contradiction" (which approach works better),
+  "hint": "A helpful hint for solving the problem",
+  "directProof": {
+    "assumption": "Starting point/given for direct proof",
+    "conclusion": "What we conclude (typically 'Therefore [statement]')"
+  },
+  "contradictionProof": {
+    "assumption": "What we assume for contradiction (typically 'Assume [negation]')",
+    "contradiction": "The contradiction we reach (end with '- Contradiction!')"
+  },
+  "steps": [
+    "First step of the proof",
+    "Second step",
+    "Third step",
+    "Fourth step",
+    "Fifth step",
+    "Sixth step (if needed)"
+  ]
+}
+
+Important requirements:
+- The steps array should contain 4-6 logical steps that lead from assumption to conclusion
+- Each step should be one clear sentence
+- Use LaTeX notation with $ for math expressions
+- The proof should be mathematically correct
+- Don't include "Therefore" or conclusion statements in the steps array
+- Make the problem appropriate for undergraduate mathematics
+
+Example for reference:
+For "bare statement" in "number theory", you might generate a problem about √5 being irrational, or about infinitely many primes of a certain form.
+
+RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
+
+                const response = await callAI(prompt);
+                const parsed = extractJSON(response);
+                state.currentProblem = validateProblem(parsed);
+                
+                console.log('AI generated problem:', state.currentProblem);
+                
+            } catch (error) {
+                console.error('AI generation failed:', error);
+                
+                // Use fallback problems based on user's selection
+                if (sampleProblems[key]) {
+                    state.currentProblem = sampleProblems[key];
+                } else {
+                    // If exact combination doesn't exist, try to find closest match
+                    const fallbackKey = Object.keys(sampleProblems).find(k => 
+                        k.includes(type) || k.includes(area)
+                    );
+                    state.currentProblem = sampleProblems[fallbackKey] || sampleProblems['bare-number-theory'];
+                }
+                
+                // Show subtle notification that fallback is being used
+                const notification = document.createElement('div');
+                notification.className = 'warning-notice';
+                notification.innerHTML = 'Using pre-loaded problem (AI temporarily unavailable)';
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.right = '20px';
+                notification.style.zIndex = '2000';
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            }
             
             // Display the problem
             document.getElementById('theorem-text').innerHTML = state.currentProblem.statement;
