@@ -1171,26 +1171,36 @@ function generateMultipleChoiceOptions(strategy) {
     let correctAnswer = '';
     
     if (strategy === 'contrapositive') {
-        // For contrapositive: need to negate the conclusion
+        // For contrapositive: Show the COMPLETE statement to prove
         correctAnswer = problem.contrapositiveProof?.assumption || "Assume \\(n\\) is odd";
         
-        if (problem.statement.includes('even')) {
+        if (problem.statement.includes('If') && problem.statement.includes('even')) {
+            // Parse the implication to create proper contrapositive
             options = [
-                { text: "Assume \\(n\\) is odd", correct: true },
-                { text: "Assume \\(n\\) is even", correct: false },
-                { text: "Assume \\(n^2\\) is odd", correct: false },
+                { text: "Prove: If \\(n\\) is odd, then \\(n^2\\) is odd", correct: true },
+                { text: "Prove: If \\(n^2\\) is odd, then \\(n\\) is odd", correct: false },
+                { text: "Prove: If \\(n\\) is even, then \\(n^2\\) is even", correct: false },
                 { text: "Assume \\(n^2\\) is even AND \\(n\\) is odd", correct: false }
             ];
         } else {
-            // Generate appropriate options based on problem
+            // Generic contrapositive options
             options = [
-                { text: correctAnswer, correct: true },
-                { text: "Assume the hypothesis", correct: false },
-                { text: "Assume both hypothesis and conclusion", correct: false },
-                { text: "Assume neither hypothesis nor conclusion", correct: false }
+                { text: "Prove: If ¬Q, then ¬P (the contrapositive)", correct: true },
+                { text: "Prove: If P, then Q (the original statement)", correct: false },
+                { text: "Assume P AND ¬Q (for contradiction)", correct: false },
+                { text: "Assume ¬P AND Q", correct: false }
             ];
         }
+        
+        // Update the question text for contrapositive
+        document.querySelector('#alternative-section h4').innerHTML = 
+            'For contrapositive, which statement will you prove instead?';
+            
     } else if (strategy === 'contradiction') {
+        // Keep the original question for contradiction
+        document.querySelector('#alternative-section h4').innerHTML = 
+            'What do you assume for contradiction?';
+            
         correctAnswer = problem.contradictionProof?.assumption || problem.alternative;
         
         if (problem.statement.includes('does not exist')) {
@@ -1211,12 +1221,12 @@ function generateMultipleChoiceOptions(strategy) {
                 { text: `Assume \\(\\sqrt{${subject}}\\) is an integer`, correct: false }
             ];
         } else if (problem.statement.includes('If') && problem.statement.includes('then')) {
-            // Implication problems
+            // Implication problems - for contradiction
             options = [
-                { text: correctAnswer, correct: true },
-                { text: "Assume only the hypothesis", correct: false },
-                { text: "Assume only the conclusion", correct: false },
-                { text: "Assume neither the hypothesis nor conclusion", correct: false }
+                { text: "Assume \\(n^2\\) is even AND \\(n\\) is odd", correct: true },
+                { text: "Assume \\(n\\) is odd only", correct: false },
+                { text: "Assume \\(n^2\\) is even only", correct: false },
+                { text: "Assume \\(n\\) is even AND \\(n^2\\) is odd", correct: false }
             ];
         } else {
             // Generic contradiction
@@ -1245,7 +1255,7 @@ function generateMultipleChoiceOptions(strategy) {
     optionsDiv.innerHTML = html;
     
     // Store correct answer for reference
-    state.builderState.correctAssumption = correctAnswer;
+    state.builderState.correctAssumption = options.find(opt => opt.correct).text;
     
     renderMath();
 }
@@ -1253,6 +1263,7 @@ function generateMultipleChoiceOptions(strategy) {
 function checkMultipleChoice(index, isCorrect) {
     const feedbackDiv = document.getElementById('builder-alternative-feedback');
     const optionsDiv = document.getElementById('multiple-choice-options');
+    const strategy = state.builderState.selectedStrategy;
     
     // Highlight selected option
     document.querySelectorAll('#multiple-choice-options .strategy-card').forEach(card => {
@@ -1261,9 +1272,17 @@ function checkMultipleChoice(index, isCorrect) {
     document.querySelector(`#multiple-choice-options .strategy-card[data-index="${index}"]`).classList.add('selected');
     
     if (isCorrect) {
+        let message = '';
+        if (strategy === 'contrapositive') {
+            message = `<strong>Correct!</strong> You'll prove the contrapositive statement.<br>
+                      <small>Remember: This is a complete new implication to prove directly.</small>`;
+        } else {
+            message = `<strong>Correct!</strong> That's exactly what we assume for contradiction.`;
+        }
+        
         feedbackDiv.innerHTML = `
             <div class="feedback-box success" style="margin-top: 1rem;">
-                <strong>Correct!</strong> That's exactly what we assume.<br>
+                ${message}<br>
                 <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
                     Continue to Proof →
                 </button>
@@ -1277,25 +1296,40 @@ function checkMultipleChoice(index, isCorrect) {
         state.builderState.attempts = (state.builderState.attempts || 0) + 1;
         
         if (state.builderState.attempts >= 2) {
+            let explanation = '';
+            if (strategy === 'contrapositive') {
+                explanation = `For contrapositive, you prove a different implication: "If ¬Q, then ¬P".<br>
+                              This swaps AND negates both parts of the original "If P, then Q".`;
+            } else {
+                explanation = `For contradiction, assume the exact opposite of what you're trying to prove.`;
+            }
+            
             feedbackDiv.innerHTML = `
                 <div class="feedback-box warning" style="margin-top: 1rem;">
-                    <strong>Not quite.</strong> The correct assumption is:<br>
+                    <strong>Not quite.</strong> The correct choice is:<br>
                     <span style="font-weight: 600; color: var(--primary);">${state.builderState.correctAssumption}</span><br>
                     <small style="display: block; margin-top: 0.5rem;">
-                        For ${state.builderState.selectedStrategy}, we need to assume the exact negation of what we're trying to prove.
+                        ${explanation}
                     </small>
                     <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
-                        Continue with correct assumption →
+                        Continue with correct approach →
                     </button>
                 </div>
             `;
             optionsDiv.style.pointerEvents = 'none';
             optionsDiv.style.opacity = '0.7';
         } else {
+            let hint = '';
+            if (strategy === 'contrapositive') {
+                hint = `Remember: contrapositive means proving "If not Q, then not P" instead of "If P, then Q".`;
+            } else {
+                hint = `Think: what is the exact opposite of what we want to prove?`;
+            }
+            
             feedbackDiv.innerHTML = `
                 <div class="feedback-box info" style="margin-top: 1rem;">
-                    <strong>Not quite.</strong> Think about what ${state.builderState.selectedStrategy} requires.<br>
-                    <small>Try again - what is the exact opposite of what we want to prove?</small>
+                    <strong>Not quite.</strong> Try again.<br>
+                    <small>${hint}</small>
                 </div>
             `;
         }
