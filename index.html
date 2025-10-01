@@ -614,9 +614,8 @@
                 <div id="alternative-section" style="display: none;">
                     <div class="alternative-input-section">
                         <h4>What do you assume for <span id="chosen-method"></span>?</h4>
-                        <div class="input-group">
-                            <input type="text" id="builder-alternative" placeholder="Enter your assumption...">
-                            <button class="btn btn-primary" onclick="checkBuilderAlternative()">Check</button>
+                        <div id="multiple-choice-options" class="strategy-grid" style="margin-top: 1.5rem;">
+                            <!-- Options will be generated dynamically -->
                         </div>
                         <div id="builder-alternative-feedback"></div>
                     </div>
@@ -1150,119 +1149,164 @@ function selectBuilderStrategy(strategy) {
         `;
     }
     
-    // Show alternative section for indirect proofs
+    // Show alternative section for indirect proofs with multiple choice
     if (strategy !== 'direct') {
         document.getElementById('alternative-section').style.display = 'block';
         document.getElementById('chosen-method').textContent = strategy;
-        document.getElementById('builder-alternative').value = '';
         document.getElementById('builder-alternative-feedback').innerHTML = '';
+        
+        // Generate multiple choice options
+        generateMultipleChoiceOptions(strategy);
     } else {
         document.getElementById('alternative-section').style.display = 'none';
         buildProofStructure();
     }
 }
 
-function checkBuilderAlternative() {
+function generateMultipleChoiceOptions(strategy) {
     const problem = state.builderState.problem;
-    const strategy = state.builderState.selectedStrategy;
-    const input = document.getElementById('builder-alternative').value.trim();
+    const optionsDiv = document.getElementById('multiple-choice-options');
     
-    if (!input) {
-        document.getElementById('builder-alternative-feedback').innerHTML = `
-            <div class="feedback-box warning">
-                Please enter your assumption!
+    let options = [];
+    let correctAnswer = '';
+    
+    if (strategy === 'contrapositive') {
+        // For contrapositive: need to negate the conclusion
+        correctAnswer = problem.contrapositiveProof?.assumption || "Assume \\(n\\) is odd";
+        
+        if (problem.statement.includes('even')) {
+            options = [
+                { text: "Assume \\(n\\) is odd", correct: true },
+                { text: "Assume \\(n\\) is even", correct: false },
+                { text: "Assume \\(n^2\\) is odd", correct: false },
+                { text: "Assume \\(n^2\\) is even AND \\(n\\) is odd", correct: false }
+            ];
+        } else {
+            // Generate appropriate options based on problem
+            options = [
+                { text: correctAnswer, correct: true },
+                { text: "Assume the hypothesis", correct: false },
+                { text: "Assume both hypothesis and conclusion", correct: false },
+                { text: "Assume neither hypothesis nor conclusion", correct: false }
+            ];
+        }
+    } else if (strategy === 'contradiction') {
+        correctAnswer = problem.contradictionProof?.assumption || problem.alternative;
+        
+        if (problem.statement.includes('does not exist')) {
+            // Non-existence problems
+            options = [
+                { text: correctAnswer, correct: true },
+                { text: "Assume nothing exists", correct: false },
+                { text: "Assume infinitely many exist", correct: false },
+                { text: "Assume the statement is true", correct: false }
+            ];
+        } else if (problem.statement.includes('irrational')) {
+            // Irrationality problems
+            const subject = problem.statement.match(/\\sqrt\{(\d+)\}/)?.[1] || '2';
+            options = [
+                { text: `Assume \\(\\sqrt{${subject}}\\) is rational`, correct: true },
+                { text: `Assume \\(\\sqrt{${subject}}\\) is irrational`, correct: false },
+                { text: `Assume \\(\\sqrt{${subject}}\\) doesn't exist`, correct: false },
+                { text: `Assume \\(\\sqrt{${subject}}\\) is an integer`, correct: false }
+            ];
+        } else if (problem.statement.includes('If') && problem.statement.includes('then')) {
+            // Implication problems
+            options = [
+                { text: correctAnswer, correct: true },
+                { text: "Assume only the hypothesis", correct: false },
+                { text: "Assume only the conclusion", correct: false },
+                { text: "Assume neither the hypothesis nor conclusion", correct: false }
+            ];
+        } else {
+            // Generic contradiction
+            options = [
+                { text: correctAnswer, correct: true },
+                { text: "Assume the statement is true", correct: false },
+                { text: "Assume nothing", correct: false },
+                { text: "Assume a different statement", correct: false }
+            ];
+        }
+    }
+    
+    // Shuffle options
+    options.sort(() => Math.random() - 0.5);
+    
+    // Build HTML
+    let html = '';
+    options.forEach((option, index) => {
+        html += `
+            <div class="strategy-card" onclick="checkMultipleChoice(${index}, ${option.correct})" data-index="${index}">
+                <p>${option.text}</p>
             </div>
         `;
-        return;
-    }
+    });
     
-    state.builderState.attempts++;
+    optionsDiv.innerHTML = html;
     
-    // Determine correct assumption based on strategy
-    let correctAssumption = '';
-    if (strategy === 'contrapositive') {
-        if (problem.contrapositiveProof) {
-            correctAssumption = problem.contrapositiveProof.assumption;
-        }
-    } else if (strategy === 'contradiction') {
-        if (problem.contradictionProof) {
-            correctAssumption = problem.contradictionProof.assumption;
-        }
-    }
+    // Store correct answer for reference
+    state.builderState.correctAssumption = correctAnswer;
     
-    // More intelligent checking - look for the key mathematical content
-    const inputLower = input.toLowerCase();
-    let isCorrect = false;
+    renderMath();
+}
+
+function checkMultipleChoice(index, isCorrect) {
+    const feedbackDiv = document.getElementById('builder-alternative-feedback');
+    const optionsDiv = document.getElementById('multiple-choice-options');
     
-    // Check based on problem type
-    if (problem.statement.includes('does not exist')) {
-        // For non-existence, check if they're assuming existence
-        isCorrect = (inputLower.includes('exist') || inputLower.includes('there is')) &&
-                   inputLower.includes('integer') &&
-                   (inputLower.includes('n^2') || inputLower.includes('n²'));
-    } else if (problem.statement.includes('irrational')) {
-        // For irrationality, check if they're assuming rationality
-        isCorrect = inputLower.includes('rational') && 
-                   !inputLower.includes('irrational');
-    } else if (strategy === 'contrapositive') {
-        // For contrapositive, check for the negation of conclusion
-        isCorrect = inputLower.includes('odd') && inputLower.includes('n');
-    } else if (strategy === 'contradiction') {
-        // For contradiction on implications, check for both parts
-        if (problem.statement.includes('then')) {
-            isCorrect = (inputLower.includes('even') && inputLower.includes('odd')) ||
-                       (inputLower.includes('but') || inputLower.includes('and'));
-        } else {
-            // For other contradictions, check for opposite
-            isCorrect = inputLower.includes('exist') || 
-                       inputLower.includes('rational') ||
-                       inputLower.includes('largest') ||
-                       inputLower.includes('finite');
-        }
-    }
+    // Highlight selected option
+    document.querySelectorAll('#multiple-choice-options .strategy-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelector(`#multiple-choice-options .strategy-card[data-index="${index}"]`).classList.add('selected');
     
     if (isCorrect) {
-        document.getElementById('builder-alternative-feedback').innerHTML = `
-            <div class="feedback-box success">
-                <strong>Correct!</strong> That's exactly right.<br>
-                More formally: ${correctAssumption}<br>
+        feedbackDiv.innerHTML = `
+            <div class="feedback-box success" style="margin-top: 1rem;">
+                <strong>Correct!</strong> That's exactly what we assume.<br>
                 <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
                     Continue to Proof →
                 </button>
             </div>
         `;
-    } else if (state.builderState.attempts <= 2) {
-        // Give helpful hints for first attempts
-        document.getElementById('builder-alternative-feedback').innerHTML = `
-            <div class="feedback-box info">
-                <strong>Not quite.</strong> ${
-                    strategy === 'contradiction' ? 
-                    'For proof by contradiction, assume the exact opposite of what you want to prove.' :
-                    'For contrapositive, assume the negation of the conclusion.'
-                }<br>
-                Try again or see the answer below.
-                ${state.builderState.attempts >= 2 ? `<br><br>
-                <strong>The correct assumption is:</strong><br>
-                ${correctAssumption}<br>
-                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
-                    Continue with this →
-                </button>` : ''}
-            </div>
-        `;
+        
+        // Disable further clicks
+        optionsDiv.style.pointerEvents = 'none';
+        optionsDiv.style.opacity = '0.7';
     } else {
-        // After multiple attempts, show the answer
-        document.getElementById('builder-alternative-feedback').innerHTML = `
-            <div class="feedback-box info">
-                <strong>The correct assumption is:</strong><br>
-                ${correctAssumption}<br>
-                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
-                    Continue with this →
-                </button>
-            </div>
-        `;
+        state.builderState.attempts = (state.builderState.attempts || 0) + 1;
+        
+        if (state.builderState.attempts >= 2) {
+            feedbackDiv.innerHTML = `
+                <div class="feedback-box warning" style="margin-top: 1rem;">
+                    <strong>Not quite.</strong> The correct assumption is:<br>
+                    <span style="font-weight: 600; color: var(--primary);">${state.builderState.correctAssumption}</span><br>
+                    <small style="display: block; margin-top: 0.5rem;">
+                        For ${state.builderState.selectedStrategy}, we need to assume the exact negation of what we're trying to prove.
+                    </small>
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
+                        Continue with correct assumption →
+                    </button>
+                </div>
+            `;
+            optionsDiv.style.pointerEvents = 'none';
+            optionsDiv.style.opacity = '0.7';
+        } else {
+            feedbackDiv.innerHTML = `
+                <div class="feedback-box info" style="margin-top: 1rem;">
+                    <strong>Not quite.</strong> Think about what ${state.builderState.selectedStrategy} requires.<br>
+                    <small>Try again - what is the exact opposite of what we want to prove?</small>
+                </div>
+            `;
+        }
     }
     
     renderMath();
+}
+
+// Remove old function
+function checkBuilderAlternative() {
+    // This function is no longer needed - replaced by checkMultipleChoice
 }
 
 function buildProofStructure() {
