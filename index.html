@@ -2,43 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Proof Strategies | Mathswell</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proof Strategies | Mathswell</title>
     <link rel="icon" href="/logo-mathswell-square-mirror.ico" type="image/x-icon">
     <link rel="icon" href="/logo-mathswell-square-mirror.svg" type="image/svg+xml">
     
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']]
-            },
-            startup: {
-                ready: () => {
-                    window.MathJax.startup.defaultReady();
-                }
-            }
-        };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     
     <style>
         :root {
-            --primary-color: #0f766e;
+            --primary: #0f766e;
             --primary-light: #10b981;
             --background: #f7faf9;
-            --accent-amber: #f59e0b;
-            --accent-red: #c62828;
+            --interactive: #e6fffb;
             --text-primary: #212121;
             --text-muted: #4b5563;
-            --container-bg: #ffffff;
-            --border-color: #e5e7eb;
-            --interactive-bg: #e6fffb;
-            --success-color: #10b981;
-            --error-color: #ef4444;
+            --accent-amber: #f59e0b;
+            --accent-red: #c62828;
+            --success: #10b981;
         }
 
-        /* Global Styles */
         * {
             margin: 0;
             padding: 0;
@@ -47,104 +33,79 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
+            background: var(--background);
             color: var(--text-primary);
-            background-color: var(--background);
-            min-height: 100vh;
+            padding-top: 60px;
+            line-height: 1.6;
+        }
+
+        /* Centered Navigation */
+        .mathswell-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 2px solid var(--primary);
+            padding: 0.75rem 1rem;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mw-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 1px;
         }
 
         .container {
             max-width: 1000px;
-            margin: 0 auto;
-            background: var(--container-bg);
-            min-height: 100vh;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
 
-        /* Mathswell Navigation */
-        .mathswell-nav {
-            display: flex;
-            justify-content: center;
-            margin: .4rem 0 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        
-        .mathswell-nav .mw-link {
-            display: inline-flex;
-            align-items: center;
-            gap: .45rem;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--primary-color);
-            padding: .3rem .7rem;
-            border-radius: 999px;
-            background: rgba(255,255,255,.9);
-            box-shadow: 0 1px 4px rgba(0,0,0,.08);
-        }
-        
-        .mathswell-nav .mw-link img {
-            display: block;
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
-            padding: 2rem 2rem 1rem;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .header .subtitle {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Tabs */
+        /* Centered Tabs */
         .tabs {
             display: flex;
-            background: var(--container-bg);
-            border-bottom: 2px solid var(--border-color);
-            overflow-x: auto;
+            gap: 0.5rem;
+            justify-content: center;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
         }
 
-        .tab-button {
-            flex: 1;
-            min-width: 150px;
-            padding: 1rem 1.5rem;
-            background: none;
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
             border: none;
-            font-size: 1rem;
+            background: transparent;
             color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.3s ease;
-            border-bottom: 4px solid transparent;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        .tab-button.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-            font-weight: 600;
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
         }
 
-        .tab-button:hover:not(.active) {
-            background: var(--interactive-bg);
+        .tab-btn:hover:not(.active) {
+            background: var(--interactive);
+            color: var(--primary);
         }
 
-        /* Tab Content */
         .tab-content {
             display: none;
-            padding: 2rem;
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.3s ease;
         }
 
         .tab-content.active {
@@ -156,478 +117,194 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Introduction Styles */
-        .intro-section {
-            max-width: 800px;
-            margin: 0 auto 3rem;
-        }
-
-        .concept-explanation {
-            background: var(--interactive-bg);
-            border-left: 4px solid var(--primary-color);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-        }
-
-        .concept-explanation h3 {
-            color: var(--primary-color);
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-        }
-
-        .motivation-example {
-            background: var(--container-bg);
-            border: 2px solid var(--primary-color);
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .motivation-example h4 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-
-        .strategy-comparison {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        @media (max-width: 768px) {
-            .strategy-comparison {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .strategy-card {
-            background: var(--container-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-        }
-
-        .strategy-card:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-        }
-
-        .strategy-card h4 {
-            color: var(--primary-color);
-            font-size: 1.2rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .strategy-card .strategy-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        /* Statement Types Styles */
-        .statement-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .statement-card {
-            background: var(--container-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .statement-card:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
-        }
-
-        .statement-card.active {
-            border-color: var(--primary-color);
-            background: var(--interactive-bg);
-        }
-
-        .statement-card h4 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        .statement-example {
-            background: var(--background);
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-            font-style: italic;
-        }
-
-        .alternative-practice {
-            background: var(--container-bg);
-            border: 2px solid var(--accent-amber);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-top: 2rem;
-            text-align: center;
-        }
-
-        .alternative-practice h3 {
-            color: var(--accent-amber);
-            margin-bottom: 1rem;
-        }
-
-        .alternative-input {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin: 1.5rem 0;
-            align-items: center;
-        }
-
-        .alternative-input input {
-            width: 100%;
-            max-width: 400px;
-            padding: 0.8rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-
-        .alternative-input input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .check-options {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .alternative-input button {
-            padding: 0.8rem 2rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .alternative-input button:hover:not(:disabled) {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .alternative-input button:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .challenge-btn {
-            background: var(--accent-amber) !important;
-        }
-
-        .challenge-btn:hover:not(:disabled) {
-            background: #dc8e0a !important;
-        }
-
-        /* Builder Controls Styles */
-        .builder-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--background);
-            border-radius: 12px;
-        }
-
-        @media (max-width: 768px) {
-            .builder-controls {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .control-group label {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .control-group select {
-            padding: 0.8rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
+        /* Concept Cards */
+        .concept-card {
             background: white;
-            font-size: 1rem;
-        }
-
-        .control-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .generate-btn {
-            grid-column: 1 / -1;
-            padding: 1rem 2rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            justify-self: center;
-            max-width: 300px;
-        }
-
-        .generate-btn:hover:not(:disabled) {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .generate-btn:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        /* Current Problem Display */
-        .current-problem {
-            background: var(--interactive-bg);
-            border: 2px solid var(--primary-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: center;
-            display: none;
-        }
-
-        .current-problem.active {
-            display: block;
-        }
-
-        .current-problem h4 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        .theorem-statement {
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: white;
-            border-radius: 8px;
-        }
-
-        /* Strategy Selection */
-        .strategy-selection {
-            background: var(--container-bg);
-            border: 2px solid var(--primary-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-        }
-
-        .strategy-selection h5 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        .strategy-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin: 1rem 0;
-            flex-wrap: wrap;
-        }
-
-        .strategy-btn {
-            padding: 1rem 1.5rem;
-            background: var(--background);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 200px;
-        }
-
-        .strategy-btn:hover {
-            border-color: var(--primary-color);
-            background: var(--interactive-bg);
-        }
-
-        .strategy-btn.selected {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .strategy-btn .strategy-label {
-            font-weight: 600;
-            font-size: 1.1rem;
-            display: block;
-            margin-bottom: 0.3rem;
-        }
-
-        .strategy-btn small {
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
-
-        /* Alternative Practice */
-        .alternative-section {
-            background: var(--container-bg);
-            border: 2px solid var(--accent-amber);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            display: none;
-        }
-
-        .alternative-section.active {
-            display: block;
-        }
-
-        .alternative-section h5 {
-            color: var(--accent-amber);
-            margin-bottom: 1rem;
-        }
-
-        .alternative-input-group {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin: 1rem 0;
-            flex-wrap: wrap;
-        }
-
-        .alternative-input-group input {
-            padding: 0.8rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            flex: 1;
-            max-width: 300px;
-        }
-
-        .alternative-input-group input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .alternative-input-group button {
-            padding: 0.8rem 1.5rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-        }
-
-        .alternative-input-group button:hover:not(:disabled) {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .alternative-input-group button:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .alternative-input-group .challenge-btn {
-            background: var(--accent-amber) !important;
-        }
-
-        .alternative-input-group .challenge-btn:hover:not(:disabled) {
-            background: #dc8e0a !important;
-        }
-
-        /* Alternative Actions */
-        .alternative-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .alternative-actions button {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .try-again-btn {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .try-again-btn:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .hint-btn {
-            background: transparent;
-            color: var(--accent-amber);
-            border: 2px solid var(--accent-amber) !important;
-        }
-
-        .hint-btn:hover {
-            background: rgba(245, 158, 11, 0.1);
-            transform: translateY(-2px);
-        }
-
-        /* Proof Structure */
-        .proof-construction {
-            display: none;
-        }
-
-        .proof-construction.active {
-            display: block;
-        }
-
-        .proof-construction h5 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 1.3rem;
-        }
-
-        .proof-box {
-            background: var(--container-bg);
-            border: 3px solid var(--border-color);
+            border: 2px solid var(--primary);
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .concept-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        /* Strategy Grid */
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .strategy-card {
+            background: white;
+            border: 2px solid var(--interactive);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .strategy-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .strategy-card.selected {
+            background: var(--interactive);
+            border-color: var(--primary);
+        }
+
+        .strategy-card h4 {
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .strategy-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Statement Display */
+        .statement-display {
+            background: var(--interactive);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Feedback Boxes */
+        .feedback-box {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .feedback-box.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success);
+            color: var(--success);
+        }
+
+        .feedback-box.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid var(--accent-amber);
+            color: #92400e;
+        }
+
+        .feedback-box.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .feedback-box.info {
+            background: var(--interactive);
+            border: 2px solid var(--primary);
+            color: var(--text-primary);
+        }
+
+        /* Alternative Input */
+        .alternative-input-section {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 300px;
+            padding: 0.8rem;
+            border: 2px solid var(--interactive);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-amber {
+            background: var(--accent-amber);
+            color: white;
+        }
+
+        .btn-amber:hover:not(:disabled) {
+            background: #dc8e0a;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: var(--interactive);
+        }
+
+        .btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Proof Structure */
+        .proof-box {
+            background: white;
+            border: 3px solid var(--interactive);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
         }
 
         .proof-box.assumption {
@@ -635,24 +312,19 @@
             background: rgba(245, 158, 11, 0.05);
         }
 
-        .proof-box.steps-container {
-            border-color: var(--border-color);
-            background: var(--background);
+        .proof-box.given {
+            border-color: var(--primary);
+            background: rgba(15, 118, 110, 0.05);
+        }
+
+        .proof-box.conclusion {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
         }
 
         .proof-box.contradiction {
             border-color: var(--accent-red);
             background: rgba(239, 68, 68, 0.05);
-        }
-
-        .proof-box.conclusion {
-            border-color: var(--success-color);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .proof-box.given {
-            border-color: var(--primary-color);
-            background: rgba(15, 118, 110, 0.05);
         }
 
         .box-label {
@@ -664,26 +336,19 @@
             letter-spacing: 0.5px;
         }
 
-        .statement-display {
-            font-size: 1.1rem;
-            padding: 0.8rem;
-            background: white;
-            border-radius: 6px;
-            text-align: center;
-        }
-
+        /* Steps Area */
         .sortable-area {
             min-height: 200px;
             padding: 1rem;
-            background: white;
-            border: 2px dashed var(--border-color);
+            background: var(--background);
+            border: 2px dashed var(--interactive);
             border-radius: 8px;
         }
 
         .proof-step {
-            background: var(--container-bg);
-            border: 2px solid var(--border-color);
-            border-left: 5px solid var(--primary-color);
+            background: white;
+            border: 2px solid var(--interactive);
+            border-left: 5px solid var(--primary);
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 0.8rem;
@@ -703,500 +368,271 @@
         }
 
         .proof-step.correct {
-            border-left-color: var(--success-color);
+            border-left-color: var(--success);
             background: rgba(16, 185, 129, 0.05);
         }
 
-        /* Proof Controls */
-        .proof-controls {
+        /* Control Panel */
+        .control-panel {
             display: flex;
             gap: 1rem;
             justify-content: center;
+            flex-wrap: wrap;
             margin: 2rem 0;
-            flex-wrap: wrap;
         }
 
-        .control-btn {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .control-btn.hint {
-            background: var(--accent-amber);
-            color: white;
-        }
-
-        .control-btn.hint:hover {
-            background: #dc8e0a;
-            transform: translateY(-2px);
-        }
-
-        .control-btn.check {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .control-btn.check:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-        }
-
-        .control-btn.reset {
-            background: var(--accent-red);
-            color: white;
-        }
-
-        .control-btn.reset:hover {
-            background: #dc2626;
-            transform: translateY(-2px);
-        }
-
-        /* Feedback Display */
-        .feedback-display {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .feedback-display.success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-            border: 2px solid var(--success-color);
-        }
-
-        .feedback-display.error {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--error-color);
-            border: 2px solid var(--error-color);
-        }
-
-        .feedback-display.info {
-            background: var(--interactive-bg);
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-        }
-
-        /* Complete Proof Display */
-        .complete-proof {
-            background: linear-gradient(135deg, #fff, var(--interactive-bg));
-            border: 3px solid var(--primary-color);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-top: 2rem;
-            box-shadow: 0 8px 32px rgba(15, 118, 110, 0.15);
-            display: none;
-            animation: slideIn 0.6s ease;
-        }
-
-        .complete-proof.active {
-            display: block;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .strategy-grid {
+                grid-template-columns: 1fr;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            
+            .input-group {
+                flex-direction: column;
             }
-        }
-
-        .complete-proof h5 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-size: 1.3rem;
-        }
-
-        .proof-content {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            line-height: 1.8;
-        }
-
-        .proof-content p {
-            margin-bottom: 1rem;
-        }
-
-        .qed {
-            text-align: right;
-            font-size: 1.2rem;
-            margin-top: 1rem;
-            color: var(--primary-color);
-            font-weight: 700;
-        }
-
-        /* Navigation Buttons */
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 2rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 2rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-
-        .nav-btn:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
+            
+            .input-group input {
+                min-width: 100%;
+            }
         }
 
         /* Key Insights */
-        .key-insights {
-            background: var(--container-bg);
+        .key-insight {
+            background: linear-gradient(135deg, white, var(--interactive));
             border: 2px solid var(--accent-amber);
             border-radius: 12px;
             padding: 1.5rem;
             margin: 2rem 0;
         }
 
-        .key-insights h4 {
+        .key-insight h4 {
             color: var(--accent-amber);
             margin-bottom: 1rem;
-            font-size: 1.2rem;
         }
 
-        .insight-item {
-            margin-bottom: 1rem;
-            padding-left: 1rem;
-            border-left: 3px solid var(--accent-amber);
+        /* Important Notice */
+        .important-notice {
+            background: rgba(239, 68, 68, 0.05);
+            border: 2px solid var(--accent-red);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
         }
 
-        .insight-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .insight-title {
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.3rem;
-        }
-
-        /* Warning Notice */
-        .warning-notice {
-            background: rgba(251, 191, 36, 0.1);
-            color: #92400e;
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            border-left: 3px solid var(--accent-amber);
-            animation: fadeIn 0.5s ease;
-        }
-
-        /* Attempt Counter */
-        .attempt-counter {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            font-style: italic;
-        }
-
-        /* Show Answer Button */
-        .show-answer-btn {
-            background: transparent !important;
-            color: var(--primary-color) !important;
-            border: 1px solid var(--primary-color) !important;
-            font-size: 0.9rem !important;
-            padding: 0.6rem 1.2rem !important;
-            margin-left: 0.5rem;
-        }
-
-        .show-answer-btn:hover:not(:disabled) {
-            background: var(--interactive-bg) !important;
-        }
-
-        /* Improved Feedback Sections */
-        .feedback-section {
-            margin-bottom: 1rem;
-        }
-
-        .feedback-section strong {
-            display: block;
+        .important-notice h4 {
+            color: var(--accent-red);
             margin-bottom: 0.5rem;
-            color: var(--primary-color);
         }
 
-        .hint-progression {
-            background: rgba(245, 158, 11, 0.1);
-            padding: 0.8rem;
-            border-radius: 6px;
-            margin-top: 0.5rem;
-            border-left: 3px solid var(--accent-amber);
+        /* Direct Proof Emphasis */
+        .direct-emphasis {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), white);
+            border: 2px solid var(--success);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
         }
 
-        .correct-answer-reveal {
-            background: rgba(16, 185, 129, 0.1);
-            padding: 0.8rem;
-            border-radius: 6px;
-            margin-top: 0.5rem;
-            border: 2px solid var(--success-color);
+        .direct-emphasis h4 {
+            color: var(--success);
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
+    <!-- Centered Navigation -->
+    <div class="mathswell-nav">
+        <a href="/" class="mw-link">
+            <img src="/logo-mathswell-square-mirror.svg" alt="Mathswell" width="28" height="28">
+            <span>MATHSWELL</span>
+        </a>
+    </div>
+
     <div class="container">
-        <!-- Mathswell Navigation Badge -->
-        <div class="mathswell-nav">
-            <a href="https://mathswell.com" class="mw-link">
-                <img src="/logo-mathswell-square-mirror.svg" alt="Mathswell" width="28" height="28">
-                <span>MATHSWELL</span>
-            </a>
-        </div>
-
-        <!-- Header -->
-        <div class="header">
-            <h1>Proof Strategies</h1>
-            <p class="subtitle">Master direct and indirect proof approaches through interactive exploration</p>
-        </div>
-
-        <!-- Tabs -->
+        <!-- Centered Tabs -->
         <div class="tabs">
-            <button class="tab-button active" data-tab="introduction">Introduction</button>
-            <button class="tab-button" data-tab="alternatives">Statement Types</button>
-            <button class="tab-button" data-tab="builder">Proof Builder</button>
+            <button class="tab-btn active" data-tab="intro">
+                <span>📚 Introduction</span>
+            </button>
+            <button class="tab-btn" data-tab="explorer">
+                <span>🔬 Explorer</span>
+            </button>
+            <button class="tab-btn" data-tab="builder">
+                <span>🏗️ Proof Builder</span>
+            </button>
         </div>
 
-        <!-- Introduction Tab -->
-        <div id="introduction" class="tab-content active">
-            <div class="intro-section">
-                <div class="concept-explanation">
-                    <h3>What are Proof Strategies?</h3>
-                    <p>When proving mathematical statements, you have two fundamental approaches: <strong>direct proof</strong> (work forward from what you know) or <strong>indirect proof</strong> (assume the opposite and find a contradiction). The key skill is recognizing which approach works best for your specific statement.</p>
+        <!-- Tab 1: Introduction -->
+        <div id="intro" class="tab-content active">
+            <div class="direct-emphasis">
+                <h4>⭐ First Principle: Always Try Direct Proof First!</h4>
+                <p>Direct proof should be your first instinct. Only when direct proof is genuinely difficult or impossible should you consider indirect methods.</p>
+            </div>
+
+            <div class="concept-card">
+                <h3>🎯 What are Proof Strategies?</h3>
+                <p>Mathematical proofs follow a hierarchy of approaches:</p>
+                <ol style="margin: 1rem 0 0 2rem;">
+                    <li><strong>Direct proof (preferred):</strong> Build a logical path from hypothesis to conclusion</li>
+                    <li><strong>Indirect proof (when needed):</strong>
+                        <ul style="margin: 0.5rem 0 0 2rem;">
+                            <li><strong>Contrapositive:</strong> For implications, prove "not Q implies not P" (written as ¬Q → ¬P)*</li>
+                            <li><strong>Contradiction:</strong> Assume the negation, derive impossibility</li>
+                        </ul>
+                    </li>
+                </ol>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">*The symbol ¬ means "not" or "the negation of"</p>
+            </div>
+
+            <div class="concept-card" style="background: linear-gradient(135deg, white, #fef3c7);">
+                <h3>🔍 When Direct Proof Works (Most Cases!)</h3>
+                <p><strong>Example: "If n is even, then n² is even"</strong></p>
+                <p style="margin: 1rem 0;">Direct proof is straightforward:</p>
+                <ul style="margin: 0 0 0 2rem;">
+                    <li>Assume n is even, so n = 2k</li>
+                    <li>Then n² = (2k)² = 4k² = 2(2k²)</li>
+                    <li>Therefore n² is even ✓</li>
+                </ul>
+                <p style="margin-top: 1rem; color: var(--accent-red);"><strong>Using indirect proof here would be unnecessarily complex!</strong></p>
+            </div>
+
+            <div class="concept-card">
+                <h3>💡 When Indirect Proof is Necessary</h3>
+                <p>Indirect proof is needed when:</p>
+                <ul style="margin: 1rem 0 0 2rem;">
+                    <li><strong>Proving irrationality:</strong> "√2 is irrational" (can't check all rationals directly)</li>
+                    <li><strong>Proving non-existence:</strong> "There is no largest prime" (can't check all possibilities)</li>
+                    <li><strong>When working backwards is easier:</strong> "If n² is even, then n is even" (hard to go from n² to n, but easy to go from n to n²)</li>
+                </ul>
+            </div>
+
+            <div class="strategy-grid">
+                <div class="strategy-card">
+                    <span class="strategy-icon">✅</span>
+                    <h4>Direct Proof</h4>
+                    <p><strong>Always try first!</strong></p>
+                    <p><strong>Works for:</strong> Most implications, existence claims, constructive proofs</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Example: "If n is odd, then n² is odd"</p>
                 </div>
 
-                <div class="motivation-example">
-                    <h4>🔍 Motivation: The Power of Elimination</h4>
-                    <p><strong>Scenario:</strong> There are three doors. You know there's a goat behind exactly one of them.</p>
-                    <p style="margin: 1rem 0;">You open the first door - no goat. You open the second door - no goat.</p>
-                    <p><strong>Conclusion:</strong> The goat must be behind the third door.</p>
-                    <p style="margin: 1rem 0;"><em>You don't need to open the third door to prove this!</em> By systematically eliminating the other possibilities, you've established the truth with certainty.</p>
-                    <p style="margin-top: 1rem;">This elimination strategy scales down beautifully: What if there were only <strong>two doors</strong>? Open one (no goat) → the goat must be behind the other. This is exactly how <strong>proof by contradiction</strong> works: every mathematical statement is either "true" or "false" - eliminate "false" and you've proven "true".</p>
+                <div class="strategy-card">
+                    <span class="strategy-icon">↔️</span>
+                    <h4>Contrapositive</h4>
+                    <p><strong>Use when:</strong> Direct proof from P is hard, but ¬Q gives clear info</p>
+                    <p><strong>Only for:</strong> Implications (If P then Q)</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Example: "If n² is even, then n is even"</p>
                 </div>
 
-                <div class="strategy-comparison">
-                    <div class="strategy-card">
-                        <span class="strategy-icon">🎯</span>
-                        <h4>Direct Proof</h4>
-                        <p><strong>When:</strong> You can build a clear logical path from assumptions to conclusion</p>
-                        <p><strong>How:</strong> Start with what you know, apply definitions and theorems, work step-by-step to your goal</p>
-                        <p><strong>Example:</strong> "If n is even, then n² is even" - use definition of even numbers directly</p>
-                    </div>
+                <div class="strategy-card">
+                    <span class="strategy-icon">💥</span>
+                    <h4>Contradiction</h4>
+                    <p><strong>Last resort:</strong> When direct construction is impossible</p>
+                    <p><strong>Necessary for:</strong> Irrationality, non-existence</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Example: "√2 is irrational"</p>
+                </div>
+            </div>
 
-                    <div class="strategy-card">
-                        <span class="strategy-icon">🔄</span>
-                        <h4>Proof by Contradiction</h4>
-                        <p><strong>When:</strong> Direct proof seems difficult, or the statement involves "not existing" or irrationality</p>
-                        <p><strong>How:</strong> Assume the opposite of what you want to prove, derive an impossible consequence</p>
-                        <p><strong>Example:</strong> "√2 is irrational" - assume it's rational and find contradiction</p>
-                    </div>
+            <div class="important-notice">
+                <h4>⚠️ Common Mistake to Avoid</h4>
+                <p>Don't use indirect proof when direct proof works! For example, proving "If n is even, then n² is even" by contradiction is poor mathematical style—the direct proof is cleaner and clearer.</p>
+            </div>
+        </div>
+
+        <!-- Tab 2: Explorer -->
+        <div id="explorer" class="tab-content">
+            <div class="concept-card">
+                <h3>🔬 Strategy Decision Tree</h3>
+                <p>Select a statement below to see which proof strategies are appropriate and why.</p>
+            </div>
+
+            <div class="strategy-grid">
+                <div class="strategy-card" onclick="exploreStatement('direct-easy')">
+                    <h4>Easy Direct Proof</h4>
+                    <p><em>"If n is even, then n² is even"</em></p>
+                </div>
+                <div class="strategy-card" onclick="exploreStatement('needs-indirect')">
+                    <h4>Needs Indirect</h4>
+                    <p><em>"If n² is even, then n is even"</em></p>
+                </div>
+                <div class="strategy-card" onclick="exploreStatement('irrational')">
+                    <h4>Irrationality</h4>
+                    <p><em>"√2 is irrational"</em></p>
+                </div>
+                <div class="strategy-card" onclick="exploreStatement('existence')">
+                    <h4>Existence</h4>
+                    <p><em>"There exists an x such that x² = 4"</em></p>
+                </div>
+            </div>
+
+            <div id="explorer-display" style="display: none;">
+                <div class="statement-display">
+                    <strong>Statement:</strong> <span id="explorer-statement"></span>
                 </div>
 
-                <div class="key-insights">
-                    <h4>🎯 The Real Challenge</h4>
-                    <div class="insight-item">
-                        <div class="insight-title">Identifying the Alternative:</div>
-                        <div>The hardest part of proof by contradiction isn't finding the contradiction - it's figuring out exactly what to assume! Different statement types have different negations.</div>
-                    </div>
-                    <div class="insight-item">
-                        <div class="insight-title">Strategic Thinking:</div>
-                        <div>Ask yourself: "What would I assume for contradiction?" If that assumption gives you concrete properties to work with, contradiction might be your best path.</div>
-                    </div>
-                </div>
+                <div id="strategy-analysis"></div>
 
-                <div class="nav-buttons">
-                    <button class="nav-btn" onclick="switchTab('alternatives')">Learn Statement Types →</button>
-                    <button class="nav-btn" onclick="switchTab('builder')">Try Proof Builder →</button>
+                <div class="alternative-input-section" id="alternative-practice" style="display: none;">
+                    <h4>Practice: What would you assume for <span id="method-name"></span>?</h4>
+                    <div class="input-group">
+                        <input type="text" id="explorer-alternative" placeholder="Enter what you would assume...">
+                        <button class="btn btn-primary" onclick="checkExplorerAlternative()">Check</button>
+                    </div>
+                    <div id="explorer-alternative-feedback"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Statement Types & Alternatives Tab -->
-        <div id="alternatives" class="tab-content">
-            <div class="intro-section">
-                <div class="concept-explanation">
-                    <h3>Mastering Alternatives: What Do You Assume for Contradiction?</h3>
-                    <p>Different types of mathematical statements have different negations. This is crucial for proof by contradiction - you need to know exactly what to assume!</p>
-                </div>
-
-                <div class="statement-grid">
-                    <div class="statement-card active" data-type="bare" onclick="showStatementType('bare', this)">
-                        <h4>Bare Statement (P)</h4>
-                        <div class="statement-example">
-                            <strong>Example:</strong> "√2 is irrational"
-                        </div>
-                        <p><strong>Alternative:</strong> Assume ¬P</p>
-                        <p><strong>For contradiction:</strong> Assume "√2 is rational"</p>
-                    </div>
-
-                    <div class="statement-card" data-type="implication" onclick="showStatementType('implication', this)">
-                        <h4>Implication (P → Q)</h4>
-                        <div class="statement-example">
-                            <strong>Example:</strong> "If n is even, then n² is even"
-                        </div>
-                        <p><strong>Alternative:</strong> Assume P ∧ ¬Q</p>
-                        <p><strong>For contradiction:</strong> Assume "n is even but n² is odd"</p>
-                    </div>
-
-                    <div class="statement-card" data-type="universal" onclick="showStatementType('universal', this)">
-                        <h4>Universal Statement (∀x P(x))</h4>
-                        <div class="statement-example">
-                            <strong>Example:</strong> "All primes > 2 are odd"
-                        </div>
-                        <p><strong>Alternative:</strong> Find x where ¬P(x)</p>
-                        <p><strong>For contradiction:</strong> Find "a prime > 2 that is even"</p>
-                    </div>
-
-                    <div class="statement-card" data-type="existence" onclick="showStatementType('existence', this)">
-                        <h4>Existence Statement (∃x P(x))</h4>
-                        <div class="statement-example">
-                            <strong>Example:</strong> "There exists an irrational number"
-                        </div>
-                        <p><strong>Alternative:</strong> Assume ∀x ¬P(x)</p>
-                        <p><strong>For contradiction:</strong> Assume "all numbers are rational"</p>
-                    </div>
-                </div>
-
-                <div class="alternative-practice">
-                    <h3>Practice: Identify the Alternative</h3>
-                    <div id="practice-statement">
-                        Click a statement type above to see a practice problem!
-                    </div>
-                    <div class="alternative-input">
-                        <input type="text" id="alternative-input" placeholder="What would you assume for contradiction?" disabled>
-                        <div class="check-options">
-                            <button id="check-alternative" onclick="checkAlternative()" disabled>Quick Check</button>
-                            <button id="challenge-ai" onclick="challengeAI()" disabled class="challenge-btn">Challenge AI</button>
-                        </div>
-                    </div>
-                    <div id="alternative-feedback" class="feedback-display" style="display: none;"></div>
-                </div>
-
-                <div class="nav-buttons">
-                    <button class="nav-btn" onclick="switchTab('builder')">Apply in Proof Builder →</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Proof Builder Tab -->
+        <!-- Tab 3: Proof Builder -->
         <div id="builder" class="tab-content">
-            <div class="intro-section">
-                <div class="concept-explanation">
-                    <h3>Interactive Proof Builder</h3>
-                    <p>Generate dynamic proof problems with AI assistance. Choose your strategic approach, identify key assumptions, then construct the full proof step by step.</p>
-                    <p style="font-size: 0.9rem; font-style: italic; color: var(--text-muted); margin-top: 1rem; opacity: 0.9;">
-                        <strong>Note:</strong> The AI helper can make mistakes and may be temporarily unavailable during periods of high traffic.
-                    </p>
+            <div class="concept-card">
+                <h3>🏗️ Interactive Proof Builder</h3>
+                <p>Generate problems and construct proofs. The app will guide you to use the most appropriate strategy.</p>
+            </div>
+
+            <div class="control-panel">
+                <select id="problem-type" class="btn btn-outline">
+                    <option value="direct-natural">Direct Proof Natural</option>
+                    <option value="indirect-needed">Indirect Proof Needed</option>
+                    <option value="irrational">Irrationality Proof</option>
+                    <option value="existence">Existence Proof</option>
+                    <option value="nonexistence">Non-Existence Proof</option>
+                </select>
+                <button class="btn btn-amber" onclick="generateProblem()">Generate Problem</button>
+            </div>
+
+            <div id="builder-content" style="display: none;">
+                <div class="statement-display">
+                    <strong>Prove:</strong> <span id="problem-statement"></span>
                 </div>
 
-                <div class="builder-controls">
-                    <div class="control-group">
-                        <label for="statement-type">Statement Type</label>
-                        <select id="statement-type">
-                            <option value="bare">Bare Statement</option>
-                            <option value="implication">Implication</option>
-                            <option value="universal">Universal Statement</option>
-                            <option value="existence">Existence Statement</option>
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label for="subject-area">Subject Area</label>
-                        <select id="subject-area">
-                            <option value="number-theory">Number Theory</option>
-                            <option value="geometry">Geometry</option>
-                            <option value="algebra">Algebra</option>
-                            <option value="analysis">Real Analysis</option>
-                        </select>
-                    </div>
-                    <button class="generate-btn" onclick="generateProblem()">
-                        Generate Problem with AI
-                    </button>
+                <div id="strategy-selection">
+                    <h4 style="text-align: center; margin: 2rem 0 1rem;">Available Proof Strategies:</h4>
+                    <div id="builder-strategy-options" class="strategy-grid"></div>
+                    <div id="strategy-feedback"></div>
                 </div>
 
-                <div id="current-problem" class="current-problem">
-                    <h4>Current Problem</h4>
-                    <div id="theorem-text" class="theorem-statement"></div>
+                <div id="alternative-section" style="display: none;">
+                    <div class="alternative-input-section">
+                        <h4>What do you assume for <span id="chosen-method"></span>?</h4>
+                        <div class="input-group">
+                            <input type="text" id="builder-alternative" placeholder="Enter your assumption...">
+                            <button class="btn btn-primary" onclick="checkBuilderAlternative()">Check</button>
+                        </div>
+                        <div id="builder-alternative-feedback"></div>
+                    </div>
+                </div>
+
+                <div id="proof-construction" style="display: none;">
+                    <h4 style="text-align: center; margin: 2rem 0 1rem;">Construct the Proof</h4>
+                    <div id="proof-structure"></div>
                     
-                    <!-- Step 1: Strategy Selection -->
-                    <div class="strategy-selection">
-                        <h5>Step 1: Choose Your Proof Strategy</h5>
-                        <p>Which approach seems more promising for this statement?</p>
-                        <div class="strategy-buttons">
-                            <button class="strategy-btn" onclick="selectBuilderStrategy('direct')">
-                                <span class="strategy-label">🎯 Direct Proof</span>
-                                <small>Work forward from assumptions</small>
-                            </button>
-                            <button class="strategy-btn" onclick="selectBuilderStrategy('contradiction')">
-                                <span class="strategy-label">🔄 Proof by Contradiction</span>
-                                <small>Assume the opposite</small>
-                            </button>
-                        </div>
-                        <div id="strategy-feedback" class="feedback-display" style="display: none;"></div>
+                    <div class="control-panel">
+                        <button class="btn btn-amber" onclick="getHint()">💡 Hint</button>
+                        <button class="btn btn-primary" onclick="checkProof()">✓ Check Proof</button>
+                        <button class="btn btn-outline" onclick="resetProof()">↻ Reset</button>
                     </div>
-
-                    <!-- Step 2: Alternative (for contradiction only) -->
-                    <div id="alternative-section" class="alternative-section">
-                        <h5>Step 2: Identify What to Assume</h5>
-                        <p>What would you assume for proof by contradiction?</p>
-                        <div class="alternative-input-group">
-                            <input type="text" id="builder-alternative-input" placeholder="Enter what you would assume...">
-                            <button id="quick-check-btn" onclick="checkBuilderAlternative()">Quick Check</button>
-                        </div>
-                        <div id="builder-alternative-feedback" class="feedback-display" style="display: none;"></div>
-                        <div id="alternative-actions" class="alternative-actions" style="display: none;">
-                            <button onclick="checkBuilderAlternative()" class="try-again-btn">Try Again</button>
-                            <button onclick="getStructuredHint()" class="hint-btn">Get Hint</button>
-                            <button onclick="challengeAIBuilder()" class="challenge-btn">Challenge AI</button>
-                            <button id="show-answer-btn" onclick="showBuilderAnswer()" class="show-answer-btn" style="display: none;">Show Answer</button>
-                            <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn" style="display: none;">Continue to Proof →</button>
-                        </div>
-                    </div>
-
-                    <!-- Proof Construction -->
-                    <div id="proof-construction" class="proof-construction">
-                        <h5 id="construction-title">Construct the Proof</h5>
-                        
-                        <div id="proof-structure">
-                            <!-- Structure will be built dynamically here -->
-                        </div>
-
-                        <div class="proof-controls">
-                            <button class="control-btn hint" onclick="showHint()">💡 Hint</button>
-                            <button class="control-btn check" onclick="checkProof()">✅ Check Proof</button>
-                            <button class="control-btn reset" onclick="resetProof()">🔄 Reset</button>
-                        </div>
-
-                        <div id="proof-feedback" class="feedback-display" style="display: none;"></div>
-
-                        <div id="complete-proof" class="complete-proof">
-                            <h5>✨ Complete Proof</h5>
-                            <div id="proof-content" class="proof-content"></div>
-                        </div>
-                    </div>
+                    
+                    <div id="proof-feedback"></div>
                 </div>
             </div>
         </div>
@@ -1205,1144 +641,725 @@
     <script>
 // State management
 let state = {
-    currentStatementType: 'bare',
-    currentProblem: null,
-    selectedStrategy: null,
-    draggedElement: null,
-    originalStepsOrder: [],
-    attemptCounts: {
-        alternatives: {},
-        builder: 0
+    currentTab: 'intro',
+    explorerState: {
+        statementType: null,
+        selectedStrategy: null
     },
-    practiceProblems: {
-        bare: {
-            statement: "√2 is irrational",
-            alternative: "√2 is rational",
-            variations: ["sqrt 2 is rational", "assume √2 rational", "root 2 is rational", "square root of 2 is rational"]
+    builderState: {
+        problem: null,
+        selectedStrategy: null,
+        draggedElement: null,
+        attempts: 0
+    }
+};
+
+// Problem database - properly categorized by natural strategy
+const problemDatabase = {
+    'direct-natural': [
+        {
+            statement: "If \\(n\\) is even, then \\(n^2\\) is even",
+            naturalStrategies: ['direct'],
+            unnecessaryStrategies: ['contrapositive', 'contradiction'],
+            
+            whyDirect: "Direct proof is straightforward: start with n = 2k, compute n² = 4k².",
+            whyNotIndirect: "Using indirect proof here is poor style—it makes a simple problem unnecessarily complex.",
+            
+            directProof: {
+                assumption: "Assume \\(n\\) is even",
+                steps: [
+                    "Since \\(n\\) is even, \\(n = 2k\\) for some integer \\(k\\)",
+                    "Square both sides: \\(n^2 = (2k)^2\\)",
+                    "Simplify: \\(n^2 = 4k^2\\)",
+                    "Factor: \\(n^2 = 2(2k^2)\\)"
+                ],
+                conclusion: "Therefore \\(n^2\\) is even"
+            }
         },
-        implication: {
-            statement: "If n is even, then n² is even",
-            alternative: "n is even but n² is odd",
-            variations: ["n even and n² odd", "n is even but n squared is odd", "assume n even but n² not even", "n even and n² not even"]
-        },
-        universal: {
-            statement: "Every prime number greater than 2 is odd",
-            alternative: "There exists a prime number greater than 2 that is even",
-            variations: ["some prime > 2 is even", "find an even prime > 2", "exists even prime greater than 2", "some prime greater than 2 is even"]
-        },
-        existence: {
-            statement: "There exists an irrational number",
-            alternative: "All numbers are rational",
-            variations: ["no irrational numbers exist", "assume all numbers rational", "every number is rational", "no numbers are irrational"]
+        {
+            statement: "If \\(n\\) is odd, then \\(n^2\\) is odd",
+            naturalStrategies: ['direct'],
+            unnecessaryStrategies: ['contrapositive', 'contradiction'],
+            
+            whyDirect: "Direct proof is clean: n = 2k+1 leads immediately to n² = 2(2k²+2k) + 1.",
+            whyNotIndirect: "Indirect proof adds unnecessary complexity to a straightforward problem.",
+            
+            directProof: {
+                assumption: "Assume \\(n\\) is odd",
+                steps: [
+                    "Since \\(n\\) is odd, \\(n = 2k+1\\) for some integer \\(k\\)",
+                    "Square: \\(n^2 = (2k+1)^2\\)",
+                    "Expand: \\(n^2 = 4k^2 + 4k + 1\\)",
+                    "Factor: \\(n^2 = 2(2k^2 + 2k) + 1\\)"
+                ],
+                conclusion: "Therefore \\(n^2\\) is odd"
+            }
         }
-    }
+    ],
+    
+    'indirect-needed': [
+        {
+            statement: "If \\(n^2\\) is even, then \\(n\\) is even",
+            naturalStrategies: ['contrapositive'],
+            possibleStrategies: ['contradiction'],
+            difficultStrategies: ['direct'],
+            
+            whyNotDirect: "Direct proof is difficult: starting with 'n² is even' doesn't easily tell us about n without complex case analysis.",
+            whyContrapositive: "The contrapositive 'If n is odd, then n² is odd' is much easier to prove directly.",
+            whyContradiction: "Works but less elegant than contrapositive.",
+            
+            contrapositiveProof: {
+                assumption: "Assume \\(n\\) is odd",
+                steps: [
+                    "Since \\(n\\) is odd, \\(n = 2k+1\\)",
+                    "Then \\(n^2 = (2k+1)^2 = 4k^2 + 4k + 1\\)",
+                    "So \\(n^2 = 2(2k^2 + 2k) + 1\\)",
+                    "Therefore \\(n^2\\) is odd"
+                ],
+                conclusion: "By contrapositive, if \\(n^2\\) is even, then \\(n\\) is even"
+            },
+            
+            contradictionProof: {
+                assumption: "Assume \\(n^2\\) is even AND \\(n\\) is odd",
+                steps: [
+                    "Since \\(n\\) is odd, \\(n = 2k+1\\)",
+                    "Then \\(n^2 = (2k+1)^2 = 4k^2 + 4k + 1\\)",
+                    "So \\(n^2 = 2(2k^2 + 2k) + 1\\)",
+                    "This means \\(n^2\\) is odd"
+                ],
+                contradiction: "But we assumed \\(n^2\\) is even—Contradiction!",
+                conclusion: "Therefore if \\(n^2\\) is even, then \\(n\\) must be even"
+            }
+        }
+    ],
+    
+    'irrational': [
+        {
+            statement: "\\(\\sqrt{2}\\) is irrational",
+            naturalStrategies: ['contradiction'],
+            impossibleStrategies: ['direct', 'contrapositive'],
+            
+            whyNotDirect: "Direct proof is impossible: we cannot check that √2 ≠ p/q for all infinitely many rational numbers p/q.",
+            whyContradiction: "We must use contradiction: assume √2 is rational and derive an impossibility.",
+            
+            contradictionProof: {
+                assumption: "Assume \\(\\sqrt{2}\\) is rational, so \\(\\sqrt{2} = p/q\\) with gcd(p,q) = 1",
+                steps: [
+                    "Square both sides: \\(2 = p^2/q^2\\)",
+                    "Rearrange: \\(2q^2 = p^2\\)",
+                    "Since \\(p^2\\) is even, \\(p\\) must be even. Let \\(p = 2k\\)",
+                    "Substitute: \\(2q^2 = (2k)^2 = 4k^2\\)",
+                    "Simplify: \\(q^2 = 2k^2\\)",
+                    "Since \\(q^2\\) is even, \\(q\\) must be even"
+                ],
+                contradiction: "Both p and q are even, contradicting gcd(p,q) = 1",
+                conclusion: "Therefore \\(\\sqrt{2}\\) is irrational"
+            }
+        },
+        {
+            statement: "\\(\\sqrt{3}\\) is irrational",
+            naturalStrategies: ['contradiction'],
+            impossibleStrategies: ['direct', 'contrapositive'],
+            
+            whyNotDirect: "Direct proof impossible: cannot verify √3 ≠ p/q for infinitely many rationals.",
+            whyContradiction: "Contradiction is the only viable approach for irrationality proofs.",
+            
+            contradictionProof: {
+                assumption: "Assume \\(\\sqrt{3} = p/q\\) with gcd(p,q) = 1",
+                steps: [
+                    "Square: \\(3 = p^2/q^2\\), so \\(3q^2 = p^2\\)",
+                    "Thus \\(p^2\\) is divisible by 3",
+                    "Therefore \\(p\\) is divisible by 3. Let \\(p = 3k\\)",
+                    "Substitute: \\(3q^2 = (3k)^2 = 9k^2\\)",
+                    "Simplify: \\(q^2 = 3k^2\\)",
+                    "So \\(q\\) is also divisible by 3"
+                ],
+                contradiction: "Both divisible by 3, contradicting gcd(p,q) = 1",
+                conclusion: "Therefore \\(\\sqrt{3}\\) is irrational"
+            }
+        }
+    ],
+    
+    'existence': [
+        {
+            statement: "There exists a real number \\(x\\) such that \\(x^2 = 4\\)",
+            naturalStrategies: ['direct'],
+            unnecessaryStrategies: ['contradiction'],
+            
+            whyDirect: "To prove existence, just provide one example: x = 2.",
+            whyNotContradiction: "Using contradiction is unnecessarily complex when we can just exhibit a solution.",
+            
+            directProof: {
+                assumption: "We need to find an \\(x\\) with \\(x^2 = 4\\)",
+                steps: [
+                    "Consider \\(x = 2\\)",
+                    "Check: \\(2^2 = 4\\) ✓",
+                    "Also, \\(x = -2\\) works: \\((-2)^2 = 4\\) ✓"
+                ],
+                conclusion: "Therefore \\(x = 2\\) (or \\(x = -2\\)) satisfies the equation"
+            }
+        }
+    ],
+    
+    'nonexistence': [
+        {
+            statement: "There does not exist an integer \\(n\\) such that \\(n^2 = 2\\)",
+            naturalStrategies: ['contradiction'],
+            impossibleStrategies: ['direct'],
+            
+            whyNotDirect: "Direct proof of non-existence would require checking all integers, which is impossible.",
+            whyContradiction: "Assume such an integer exists and derive a contradiction.",
+            
+            contradictionProof: {
+                assumption: "Assume there exists an integer \\(n\\) such that \\(n^2 = 2\\)",
+                steps: [
+                    "Case 1: If \\(n = 0\\), then \\(n^2 = 0 \\neq 2\\)",
+                    "Case 2: If \\(n = 1\\), then \\(n^2 = 1 < 2\\)",
+                    "Case 3: If \\(n = -1\\), then \\(n^2 = 1 < 2\\)",
+                    "Case 4: If \\(|n| \\geq 2\\), then \\(n^2 \\geq 4 > 2\\)",
+                    "So if \\(n^2 = 2\\), we need \\(1 < n^2 < 4\\), meaning \\(1 < |n| < 2\\)",
+                    "But there is no integer with absolute value strictly between 1 and 2"
+                ],
+                contradiction: "No integer can satisfy \\(n^2 = 2\\)",
+                conclusion: "Therefore no integer \\(n\\) exists such that \\(n^2 = 2\\)"
+            }
+        },
+        {
+            statement: "There is no largest prime number",
+            naturalStrategies: ['contradiction'],
+            impossibleStrategies: ['direct'],
+            
+            whyNotDirect: "Cannot directly prove there's no largest prime—we'd need to check infinitely many numbers.",
+            whyContradiction: "Classic proof: assume there's a largest prime, construct a larger one.",
+            
+            contradictionProof: {
+                assumption: "Assume there is a largest prime, call it \\(p\\)",
+                steps: [
+                    "List all primes: \\(2, 3, 5, ..., p\\)",
+                    "Consider \\(N = (2 \\cdot 3 \\cdot 5 \\cdots p) + 1\\)",
+                    "\\(N\\) is larger than \\(p\\)",
+                    "\\(N\\) leaves remainder 1 when divided by any prime ≤ \\(p\\)",
+                    "So \\(N\\) is either prime itself, or divisible by a prime > \\(p\\)",
+                    "Either way, there exists a prime larger than \\(p\\)"
+                ],
+                contradiction: "This contradicts \\(p\\) being the largest prime",
+                conclusion: "Therefore there is no largest prime"
+            }
+        }
+    ]
 };
 
-// Sample problems for builder (fallback when AI is unavailable)
-const sampleProblems = {
-    'bare-number-theory': {
-        statement: "√3 is irrational",
-        alternative: "√3 is rational",
-        preferredStrategy: "contradiction",
-        hint: "Assume √3 = p/q in lowest terms, then show both p and q must be divisible by 3.",
-        directProof: {
-            assumption: "We need to prove √3 is irrational",
-            conclusion: "Therefore √3 is irrational"
-        },
-        contradictionProof: {
-            assumption: "Assume √3 is rational, so √3 = p/q where gcd(p,q) = 1",
-            contradiction: "But gcd(p,q) = 1 and both p and q are divisible by 3 - Contradiction!"
-        },
-        steps: [
-            "Square both sides: 3 = p²/q²",
-            "Multiply by q²: 3q² = p²",
-            "Since p² is divisible by 3, p must be divisible by 3. Let p = 3k",
-            "Substitute: 3q² = (3k)² = 9k²",
-            "Simplify: q² = 3k²",
-            "Since q² is divisible by 3, q must be divisible by 3"
-        ]
+// Explorer data
+const explorerData = {
+    'direct-easy': {
+        statement: "If \\(n\\) is even, then \\(n^2\\) is even",
+        analysis: `
+            <div class="direct-emphasis">
+                <h4>✅ Use Direct Proof!</h4>
+                <p>This has a straightforward direct proof. Start with the definition of even (n = 2k) and show n² is even.</p>
+                <p><strong>Direct proof:</strong></p>
+                <ul style="margin: 0.5rem 0 0 2rem;">
+                    <li>Assume n = 2k</li>
+                    <li>Then n² = 4k² = 2(2k²)</li>
+                    <li>Therefore n² is even ✓</li>
+                </ul>
+            </div>
+            <div class="important-notice">
+                <h4>⚠️ Why NOT use indirect proof?</h4>
+                <p>Using contrapositive or contradiction here is poor mathematical style. It would make this simple problem unnecessarily complex. Always prefer the simplest correct approach!</p>
+            </div>
+        `
     },
-    'existence-number-theory': {
-        statement: "There exists a prime number between 10 and 20",
-        alternative: "There is no prime number between 10 and 20",
-        preferredStrategy: "direct",
-        hint: "To prove existence, you just need to find one example. Check if 11, 13, 17, or 19 are prime.",
-        directProof: {
-            assumption: "We need to prove there exists a prime between 10 and 20",
-            conclusion: "Therefore, there exists a prime number between 10 and 20"
-        },
-        contradictionProof: {
-            assumption: "Assume there is no prime number between 10 and 20",
-            contradiction: "But 11 is prime and 10 < 11 < 20 - Contradiction!"
-        },
-        steps: [
-            "Consider the number 11, which is between 10 and 20",
-            "Check if 11 has any divisors other than 1 and itself",
-            "11 is not divisible by 2 (it's odd)",
-            "11 is not divisible by 3 (11 = 3×3 + 2)",
-            "We only need to check up to √11 ≈ 3.3, so we've checked all necessary divisors",
-            "Since 11 has no divisors other than 1 and 11, it is prime"
-        ]
+    
+    'needs-indirect': {
+        statement: "If \\(n^2\\) is even, then \\(n\\) is even",
+        analysis: `
+            <div class="feedback-box warning">
+                <h4>🤔 Direct proof is difficult here</h4>
+                <p>Starting with "n² is even" doesn't easily tell us about n itself.</p>
+            </div>
+            <div class="direct-emphasis">
+                <h4>↔️ Use Contrapositive!</h4>
+                <p>The contrapositive "If n is odd, then n² is odd" is much easier to prove:</p>
+                <ul style="margin: 0.5rem 0 0 2rem;">
+                    <li>Assume n = 2k+1 (odd)</li>
+                    <li>Then n² = (2k+1)² = 4k² + 4k + 1 = 2(2k² + 2k) + 1</li>
+                    <li>So n² is odd ✓</li>
+                </ul>
+            </div>
+            <button class="btn btn-primary" onclick="showAlternativePractice('contrapositive')" style="margin-top: 1rem;">
+                Practice: What do you assume for contrapositive?
+            </button>
+        `,
+        alternative: "n is odd",
+        method: "contrapositive"
     },
-    'existence-algebra': {
-        statement: "There exists a real number $x$ such that $x^2 - 5x + 6 = 0$",
-        alternative: "For all real numbers $x$, $x^2 - 5x + 6 ≠ 0$",
-        preferredStrategy: "direct",
-        hint: "Factor the quadratic: $x^2 - 5x + 6 = (x-2)(x-3)$",
-        directProof: {
-            assumption: "We need to find a real number $x$ such that $x^2 - 5x + 6 = 0$",
-            conclusion: "Therefore, there exists a real number $x$ satisfying the equation"
-        },
-        contradictionProof: {
-            assumption: "Assume for all real $x$, $x^2 - 5x + 6 ≠ 0$",
-            contradiction: "But $x = 2$ gives $4 - 10 + 6 = 0$ - Contradiction!"
-        },
-        steps: [
-            "Factor the quadratic: $x^2 - 5x + 6 = (x-2)(x-3)$",
-            "Set each factor equal to zero: $x-2 = 0$ or $x-3 = 0$",
-            "Solve: $x = 2$ or $x = 3$",
-            "Verify with $x = 2$: $2^2 - 5(2) + 6 = 4 - 10 + 6 = 0$ ✓",
-            "Verify with $x = 3$: $3^2 - 5(3) + 6 = 9 - 15 + 6 = 0$ ✓",
-            "Both $x = 2$ and $x = 3$ are real numbers that satisfy the equation"
-        ]
+    
+    'irrational': {
+        statement: "\\(\\sqrt{2}\\) is irrational",
+        analysis: `
+            <div class="feedback-box error">
+                <h4>❌ Direct proof is IMPOSSIBLE</h4>
+                <p>We cannot verify √2 ≠ p/q for all infinitely many rational numbers p/q.</p>
+            </div>
+            <div class="direct-emphasis" style="border-color: var(--accent-amber); background: rgba(245, 158, 11, 0.05);">
+                <h4 style="color: var(--accent-amber);">💥 Must use Proof by Contradiction!</h4>
+                <p>This is a classic case where contradiction is necessary:</p>
+                <ol style="margin: 0.5rem 0 0 2rem;">
+                    <li>Assume √2 IS rational (√2 = p/q in lowest terms)</li>
+                    <li>Derive that both p and q must be even</li>
+                    <li>This contradicts "lowest terms"</li>
+                    <li>Therefore √2 must be irrational</li>
+                </ol>
+            </div>
+            <button class="btn btn-amber" onclick="showAlternativePractice('contradiction')" style="margin-top: 1rem;">
+                Practice: What do you assume for contradiction?
+            </button>
+        `,
+        alternative: "√2 is rational (√2 = p/q with gcd(p,q) = 1)",
+        method: "contradiction"
+    },
+    
+    'existence': {
+        statement: "There exists a real number \\(x\\) such that \\(x^2 = 4\\)",
+        analysis: `
+            <div class="direct-emphasis">
+                <h4>✅ Use Direct Proof!</h4>
+                <p>For existence proofs, just provide one example:</p>
+                <p style="margin: 0.5rem 0 0 2rem;">Let x = 2. Then 2² = 4. Done! ✓</p>
+            </div>
+            <div class="feedback-box info">
+                <h4>💡 General Rule</h4>
+                <p>To prove "there exists," find one example. To disprove "for all," find one counterexample.</p>
+            </div>
+        `
     }
 };
-
-// DOM references
-const tabButtons = document.querySelectorAll('.tab-button');
-const tabContents = document.querySelectorAll('.tab-content');
-
-// Initialize
-function init() {
-    setupTabs();
-    showStatementType('bare', document.querySelector('[data-type="bare"]'));
-}
 
 // Tab switching
-function setupTabs() {
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabId = button.getAttribute('data-tab');
-            switchTab(tabId);
-        });
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+        
+        state.currentTab = tabId;
     });
+});
+
+// Explorer functions
+function exploreStatement(type) {
+    state.explorerState.statementType = type;
+    const data = explorerData[type];
+    
+    document.getElementById('explorer-statement').innerHTML = data.statement;
+    document.getElementById('strategy-analysis').innerHTML = data.analysis;
+    document.getElementById('explorer-display').style.display = 'block';
+    document.getElementById('alternative-practice').style.display = 'none';
+    
+    renderMath();
 }
 
-function switchTab(tabId) {
-    tabButtons.forEach(btn => btn.classList.remove('active'));
-    tabContents.forEach(content => content.classList.remove('active'));
+function showAlternativePractice(method) {
+    const data = explorerData[state.explorerState.statementType];
+    state.explorerState.selectedStrategy = method;
     
-    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-    document.getElementById(tabId).classList.add('active');
+    document.getElementById('method-name').textContent = method;
+    document.getElementById('alternative-practice').style.display = 'block';
+    document.getElementById('explorer-alternative').value = '';
+    document.getElementById('explorer-alternative-feedback').innerHTML = '';
 }
 
-// Statement type exploration (Tab 2)
-function showStatementType(type, element) {
-    // Update active state
-    document.querySelectorAll('.statement-card').forEach(card => {
-        card.classList.remove('active');
-    });
-    element.classList.add('active');
+function checkExplorerAlternative() {
+    const data = explorerData[state.explorerState.statementType];
+    const input = document.getElementById('explorer-alternative').value.trim();
     
-    state.currentStatementType = type;
-    state.attemptCounts.alternatives[type] = 0;
-    const problem = state.practiceProblems[type];
-    
-    document.getElementById('practice-statement').innerHTML = `
-        <strong>Practice Statement:</strong> ${problem.statement}
-    `;
-    
-    // Enable both buttons
-    document.getElementById('alternative-input').disabled = false;
-    document.getElementById('check-alternative').disabled = false;
-    document.getElementById('challenge-ai').disabled = false;
-    document.getElementById('alternative-input').placeholder = "What would you assume for contradiction?";
-    document.getElementById('alternative-input').value = "";
-    document.getElementById('alternative-feedback').style.display = 'none';
-    
-    // Typeset math if available
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([document.getElementById('practice-statement')]);
-    }
-}
-
-function checkAlternative() {
-    const userInput = document.getElementById('alternative-input').value.toLowerCase().trim();
-    const problem = state.practiceProblems[state.currentStatementType];
-    const correctAlternative = problem.alternative.toLowerCase();
-    const variations = problem.variations.map(v => v.toLowerCase());
-    
-    const feedbackDiv = document.getElementById('alternative-feedback');
-    feedbackDiv.style.display = 'block';
-    
-    state.attemptCounts.alternatives[state.currentStatementType] = 
-        (state.attemptCounts.alternatives[state.currentStatementType] || 0) + 1;
-    
-    const attemptCount = state.attemptCounts.alternatives[state.currentStatementType];
-    
-    // More flexible checking
-    let isCorrect = false;
-    let isPartiallyCorrect = false;
-    let feedback = '';
-    
-    if (userInput === '') {
-        feedbackDiv.className = 'feedback-display info';
-        feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
+    if (!input) {
+        document.getElementById('explorer-alternative-feedback').innerHTML = `
+            <div class="feedback-box warning">
+                Please enter what you would assume!
+            </div>
+        `;
         return;
     }
     
-    // Check for exact or close matches
-    const normalizedInput = userInput.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    const normalizedCorrect = correctAlternative.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    // Check if answer captures the key idea
+    const isCorrect = 
+        (data.method === 'contrapositive' && input.toLowerCase().includes('odd')) ||
+        (data.method === 'contradiction' && input.toLowerCase().includes('rational'));
     
-    if (normalizedInput === normalizedCorrect || 
-        variations.some(v => normalizedInput.includes(v.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()))) {
-        isCorrect = true;
-    }
-    
-    // Check for partial understanding based on statement type
-    else if (state.currentStatementType === 'implication') {
-        if (userInput.includes('but') || userInput.includes('and') || userInput.includes('however')) {
-            if (userInput.includes('not') || userInput.includes('odd')) {
-                isPartiallyCorrect = true;
-                feedback = "You're on the right track! For an implication P→Q, the negation is 'P is true AND Q is false'. Try to be more specific about both parts.";
-            }
-        }
-    }
-    else if (state.currentStatementType === 'universal') {
-        if (userInput.includes('exists') || userInput.includes('some') || userInput.includes('find')) {
-            isPartiallyCorrect = true;
-            feedback = "Good! You recognize that the negation of 'all' is 'some' or 'exists'. Can you be more specific about what we're looking for?";
-        }
-    }
-    else if (state.currentStatementType === 'existence') {
-        if (userInput.includes('all') || userInput.includes('no') || userInput.includes('every')) {
-            isPartiallyCorrect = true;
-            feedback = "Right direction! The negation of 'there exists' is 'for all' or 'none'. Try to complete the statement.";
-        }
-    }
-    else if (state.currentStatementType === 'bare') {
-        if (userInput.includes('rational') || userInput.includes('finite') || userInput.includes('opposite')) {
-            isPartiallyCorrect = true;
-            feedback = "You're thinking about the opposite, which is good! Can you state it more precisely?";
-        }
-    }
-    
-    // Display appropriate feedback with attempt tracking
-    if (isCorrect) {
-        feedbackDiv.className = 'feedback-display success';
-        feedbackDiv.innerHTML = `
-            <strong>Excellent!</strong><br>
-            The alternative is: "${problem.alternative}"<br>
-            This gives you something concrete to work with for contradiction.
-        `;
-    } else if (isPartiallyCorrect) {
-        feedbackDiv.className = 'feedback-display info';
-        let html = `
-            <div class="feedback-section">
-                <strong>You're getting closer!</strong>
-                ${feedback}
-            </div>
-        `;
-        
-        if (attemptCount >= 2) {
-            html += `
-                <div class="hint-progression">
-                    <strong>Hint:</strong> The complete alternative is: "${problem.alternative}"
-                    <div class="attempt-counter">Attempts: ${attemptCount}</div>
-                </div>
-            `;
-        } else {
-            html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
-        }
-        
-        feedbackDiv.innerHTML = html;
-    } else {
-        feedbackDiv.className = 'feedback-display info';
-        let html = getHelpfulHintAlternatives(state.currentStatementType, problem);
-        
-        if (attemptCount >= 3) {
-            html += `
-                <button class="show-answer-btn" onclick="showAlternativeAnswer()">Show Answer</button>
-                <div class="attempt-counter">Attempts: ${attemptCount}</div>
-            `;
-        } else {
-            html += `<div class="attempt-counter">Attempts: ${attemptCount}</div>`;
-        }
-        
-        feedbackDiv.innerHTML = html;
-    }
-    
-    // Typeset math if available
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([feedbackDiv]);
-    }
-}
-
-function showAlternativeAnswer() {
-    const problem = state.practiceProblems[state.currentStatementType];
-    const feedbackDiv = document.getElementById('alternative-feedback');
-    
-    feedbackDiv.className = 'feedback-display success';
-    feedbackDiv.innerHTML = `
-        <div class="correct-answer-reveal">
-            <strong>The correct alternative is:</strong><br>
-            "${problem.alternative}"<br><br>
-            Understanding this negation is crucial for proof by contradiction. 
-            Try another statement type to practice more!
+    document.getElementById('explorer-alternative-feedback').innerHTML = isCorrect ? `
+        <div class="feedback-box success">
+            <strong>Correct!</strong><br>
+            For ${data.method}, we assume: ${data.alternative}
+        </div>
+    ` : `
+        <div class="feedback-box info">
+            <strong>The correct assumption is:</strong><br>
+            ${data.alternative}<br>
+            <small>Remember: for ${data.method}, we need to ${
+                data.method === 'contrapositive' ? 'assume the negation of the conclusion' : 
+                'assume the opposite of what we want to prove'
+            }</small>
         </div>
     `;
     
-    // Typeset math if available
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([feedbackDiv]);
-    }
+    renderMath();
 }
 
-function getHelpfulHintAlternatives(type, problem) {
-    const hints = {
-        'bare': `<strong>Think step by step:</strong><br>
-                To negate "${problem.statement}", consider: what would be the opposite?<br>
-                <small>Hint: If something is irrational, its opposite would be...?</small>`,
-                
-        'implication': `<strong>For if-then statements:</strong><br>
-                       To negate "If P, then Q", you need "P is true AND Q is false"<br>
-                       <small>Think: "${problem.statement.split(',')[0]}" is true, but the conclusion fails.</small>`,
-                       
-        'universal': `<strong>For "all" statements:</strong><br>
-                     To negate "For all x, P(x)", you need "There exists some x where P(x) is false"<br>
-                     <small>What specific counterexample would you look for?</small>`,
-                     
-        'existence': `<strong>For "there exists" statements:</strong><br>
-                     To negate "There exists x such that P(x)", you need "For all x, P(x) is false"<br>
-                     <small>You're saying no such thing exists anywhere.</small>`
-    };
+// Builder functions
+function generateProblem() {
+    const type = document.getElementById('problem-type').value;
+    const problems = problemDatabase[type];
     
-    return hints[type] || 'Try thinking about what the logical opposite would be.';
-}
-
-async function challengeAI() {
-    const userInput = document.getElementById('alternative-input').value.trim();
-    const problem = state.practiceProblems[state.currentStatementType];
-    const feedbackDiv = document.getElementById('alternative-feedback');
-    const challengeBtn = document.getElementById('challenge-ai');
+    // Select a random problem from the category
+    const problem = problems[Math.floor(Math.random() * problems.length)];
+    state.builderState.problem = problem;
+    state.builderState.selectedStrategy = null;
+    state.builderState.attempts = 0;
     
-    if (userInput === '') {
-        feedbackDiv.style.display = 'block';
-        feedbackDiv.className = 'feedback-display info';
-        feedbackDiv.innerHTML = '<strong>Please enter your answer first!</strong>';
-        return;
-    }
-    
-    challengeBtn.disabled = true;
-    challengeBtn.textContent = 'AI Analyzing...';
-    
-    try {
-        const typeExplanations = {
-            'bare': 'a bare statement (just P)',
-            'implication': 'an implication statement (if P then Q)',
-            'universal': 'a universal statement (for all x, P(x))',
-            'existence': 'an existence statement (there exists x such that P(x))'
-        };
-        
-        const prompt = `You are a supportive mathematics tutor helping a student learn proof by contradiction. The student is working on identifying negations.
-
-Statement type: ${typeExplanations[state.currentStatementType]}
-Original statement: "${problem.statement}"
-Student's proposed negation: "${userInput}"
-Correct negation: "${problem.alternative}"
-
-Provide guided feedback following these rules:
-1. If completely correct: Celebrate and reinforce their understanding
-2. If partially correct: Identify what they got right, then give a specific hint about what's missing WITHOUT revealing the answer
-3. If incorrect: Give an encouraging hint that guides them toward the logical structure WITHOUT giving away the answer
-
-Use LaTeX notation with $ for inline math where appropriate.
-Be encouraging and specific. Focus on helping them discover the answer themselves.
-Keep response to 2-3 sentences maximum.
-
-Important: Do NOT directly state the correct answer unless the student already got it right.`;
-
-        const response = await callAI(prompt);
-        
-        feedbackDiv.style.display = 'block';
-        feedbackDiv.className = 'feedback-display info';
-        
-        // Process the response to ensure LaTeX rendering
-        const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
-            return `$${p1}$`;
-        });
-        
-        feedbackDiv.innerHTML = `
-            <div class="feedback-section">
-                <strong>AI Feedback:</strong><br>
-                ${processedResponse}
-            </div>
-        `;
-        
-        // Typeset math in the feedback
-        if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise([feedbackDiv]);
-        }
-        
-    } catch (error) {
-        console.error('AI challenge failed:', error);
-        feedbackDiv.style.display = 'block';
-        feedbackDiv.className = 'feedback-display error';
-        feedbackDiv.innerHTML = `
-            <strong>AI temporarily unavailable.</strong><br>
-            ${getHelpfulHintAlternatives(state.currentStatementType, problem)}
-        `;
-    }
-    
-    challengeBtn.disabled = false;
-    challengeBtn.textContent = 'Challenge AI';
-}
-
-// AI API integration
-async function callAI(prompt, maxRetries = 2) {
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        try {
-            if (attempt > 0) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            }
-            
-            const response = await fetch('/api/gemini', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    contents: [{ role: "user", parts: [{ text: prompt }] }] 
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            
-            if (!text) {
-                throw new Error('Empty response from AI');
-            }
-            
-            return text;
-            
-        } catch (error) {
-            console.error(`AI attempt ${attempt + 1} failed:`, error);
-            if (attempt === maxRetries) {
-                throw error;
-            }
-        }
-    }
-}
-
-function extractJSON(text) {
-    try {
-        // Try direct JSON parse first
-        return JSON.parse(text);
-    } catch {
-        // Try to find JSON in the response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error('No JSON found in response');
-        }
-        
-        const cleaned = jsonMatch[0]
-            .replace(/```json\s*/g, '')
-            .replace(/```\s*/g, '')
-            .trim();
-        
-        try {
-            return JSON.parse(cleaned);
-        } catch (e) {
-            throw new Error('Invalid JSON format');
-        }
-    }
-}
-
-function validateProblem(data) {
-    // Validate required fields
-    const required = [
-        'statement', 
-        'alternative', 
-        'preferredStrategy', 
-        'hint', 
-        'directProof', 
-        'contradictionProof', 
-        'steps'
-    ];
-    
-    for (const field of required) {
-        if (!(field in data)) {
-            throw new Error(`Missing required field: ${field}`);
-        }
-    }
-    
-    // Validate nested fields
-    if (!data.directProof.assumption || !data.directProof.conclusion) {
-        throw new Error('Missing direct proof fields');
-    }
-    
-    if (!data.contradictionProof.assumption || !data.contradictionProof.contradiction) {
-        throw new Error('Missing contradiction proof fields');
-    }
-    
-    // Validate steps is an array with at least 3 elements
-    if (!Array.isArray(data.steps) || data.steps.length < 3) {
-        throw new Error('Steps must be an array with at least 3 elements');
-    }
-    
-    return data;
-}
-
-// Proof Builder (Tab 3)
-async function generateProblem() {
-    const type = document.getElementById('statement-type').value;
-    const area = document.getElementById('subject-area').value;
-    const btn = document.querySelector('.generate-btn');
-    
-    btn.disabled = true;
-    btn.textContent = 'Generating...';
-    
-    // Reset attempt counter for builder
-    state.attemptCounts.builder = 0;
-    
-    // Build the key from user's selection
-    const key = `${type}-${area}`;
-    
-    // Try AI generation first
-    try {
-        const typeDescriptions = {
-            'bare': 'a simple statement P (like "√2 is irrational")',
-            'implication': 'an if-then statement P→Q (like "if n is even, then n² is even")',
-            'universal': 'a universal statement ∀x P(x) (like "for all integers n, n² ≥ 0")',
-            'existence': 'an existence statement ∃x P(x) (like "there exists a prime between 10 and 20")'
-        };
-        
-        const areaDescriptions = {
-            'number-theory': 'number theory (integers, primes, divisibility, rational/irrational numbers)',
-            'geometry': 'geometry (triangles, circles, angles, areas)',
-            'algebra': 'algebra (equations, inequalities, polynomials)',
-            'analysis': 'real analysis (limits, continuity, sequences, convergence)'
-        };
-        
-        const prompt = `Generate a mathematical proof problem.
-            
-Statement type: ${typeDescriptions[type]}
-Subject area: ${areaDescriptions[area]}
-
-The statement should be TRUE and suitable for proof. Create a problem that's interesting but not too complex.
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "statement": "The mathematical statement to prove (use $ for inline LaTeX math)",
-  "alternative": "What to assume for proof by contradiction (the negation of the statement)",
-  "preferredStrategy": "direct" or "contradiction" (which approach works better),
-  "hint": "A helpful hint for solving the problem",
-  "directProof": {
-    "assumption": "Starting point/given for direct proof",
-    "conclusion": "What we conclude (typically 'Therefore [statement]')"
-  },
-  "contradictionProof": {
-    "assumption": "What we assume for contradiction (typically 'Assume [negation]')",
-    "contradiction": "The contradiction we reach (end with '- Contradiction!')"
-  },
-  "steps": [
-    "First step of the proof",
-    "Second step",
-    "Third step",
-    "Fourth step",
-    "Fifth step",
-    "Sixth step (if needed)"
-  ]
-}
-
-Important requirements:
-- The steps array should contain 4-6 logical steps that lead from assumption to conclusion
-- Each step should be one clear sentence
-- Use LaTeX notation with $ for math expressions
-- The proof should be mathematically correct
-- Don't include "Therefore" or conclusion statements in the steps array
-- Make the problem appropriate for undergraduate mathematics
-
-Example for reference:
-For "bare statement" in "number theory", you might generate a problem about √5 being irrational, or about infinitely many primes of a certain form.
-
-RESPOND WITH ONLY THE JSON OBJECT, NO ADDITIONAL TEXT.`;
-
-        const response = await callAI(prompt);
-        const parsed = extractJSON(response);
-        state.currentProblem = validateProblem(parsed);
-        
-        console.log('AI generated problem:', state.currentProblem);
-        
-    } catch (error) {
-        console.error('AI generation failed:', error);
-        
-        // Use fallback problems based on user's selection
-        if (sampleProblems[key]) {
-            state.currentProblem = sampleProblems[key];
-        } else {
-            // If exact combination doesn't exist, try to find closest match
-            const fallbackKey = Object.keys(sampleProblems).find(k => 
-                k.includes(type) || k.includes(area)
-            );
-            state.currentProblem = sampleProblems[fallbackKey] || sampleProblems['bare-number-theory'];
-        }
-        
-        // Show subtle notification that fallback is being used
-        const notification = document.createElement('div');
-        notification.className = 'warning-notice';
-        notification.innerHTML = 'Using pre-loaded problem (AI temporarily unavailable)';
-        notification.style.position = 'fixed';
-        notification.style.top = '20px';
-        notification.style.right = '20px';
-        notification.style.zIndex = '2000';
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
-    }
-    
-    // Display the problem
-    document.getElementById('theorem-text').innerHTML = state.currentProblem.statement;
-    document.getElementById('current-problem').classList.add('active');
+    document.getElementById('problem-statement').innerHTML = problem.statement;
+    document.getElementById('builder-content').style.display = 'block';
     
     // Reset UI
-    resetBuilderUI();
+    document.getElementById('alternative-section').style.display = 'none';
+    document.getElementById('proof-construction').style.display = 'none';
+    document.getElementById('strategy-feedback').innerHTML = '';
     
-    btn.disabled = false;
-    btn.textContent = 'Generate Problem with AI';
+    // Build strategy buttons - ONLY show natural/possible strategies
+    buildStrategyButtons();
     
-    // Typeset math
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise();
-    }
+    renderMath();
 }
 
-function resetBuilderUI() {
-    // Clear selections
-    document.querySelectorAll('.strategy-btn').forEach(btn => {
-        btn.classList.remove('selected');
+function buildStrategyButtons() {
+    const problem = state.builderState.problem;
+    let buttonsHtml = '';
+    
+    // Determine which strategies to show
+    const strategiesToShow = [
+        ...problem.naturalStrategies,
+        ...(problem.possibleStrategies || [])
+    ];
+    
+    // Add difficult strategies if no other options
+    if (strategiesToShow.length === 0 && problem.difficultStrategies) {
+        strategiesToShow.push(...problem.difficultStrategies);
+    }
+    
+    // Build buttons only for valid strategies
+    strategiesToShow.forEach(strategy => {
+        let description = '';
+        let emphasis = '';
+        
+        if (problem.naturalStrategies.includes(strategy)) {
+            emphasis = '✓ Recommended';
+        } else if ((problem.possibleStrategies || []).includes(strategy)) {
+            emphasis = 'Also works';
+        } else if ((problem.difficultStrategies || []).includes(strategy)) {
+            emphasis = 'Difficult but possible';
+        }
+        
+        if (strategy === 'direct') {
+            description = 'Build from hypothesis to conclusion';
+        } else if (strategy === 'contrapositive') {
+            description = 'Prove ¬Q → ¬P instead';
+        } else if (strategy === 'contradiction') {
+            description = 'Assume negation, find impossibility';
+        }
+        
+        buttonsHtml += `
+            <div class="strategy-card" onclick="selectBuilderStrategy('${strategy}')">
+                <h4>${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Proof</h4>
+                <p>${description}</p>
+                <p style="color: var(--primary); font-weight: 600; margin-top: 0.5rem;">${emphasis}</p>
+            </div>
+        `;
     });
     
-    // Hide sections
-    document.getElementById('alternative-section').classList.remove('active');
-    document.getElementById('proof-construction').classList.remove('active');
-    document.getElementById('complete-proof').classList.remove('active');
-    document.getElementById('strategy-feedback').style.display = 'none';
-    document.getElementById('builder-alternative-feedback').style.display = 'none';
-    document.getElementById('proof-feedback').style.display = 'none';
+    // If no strategies available (shouldn't happen with proper data)
+    if (buttonsHtml === '') {
+        buttonsHtml = '<p>No valid strategies available for this problem.</p>';
+    }
     
-    // Reset input and buttons
-    document.getElementById('builder-alternative-input').value = '';
-    document.getElementById('builder-alternative-input').disabled = false;
-    const quickCheckBtn = document.getElementById('quick-check-btn');
-    if (quickCheckBtn) quickCheckBtn.style.display = 'inline-block';
-    document.getElementById('alternative-actions').style.display = 'none';
-    
-    state.selectedStrategy = null;
-    state.attemptCounts.builder = 0;
+    document.getElementById('builder-strategy-options').innerHTML = buttonsHtml;
 }
 
 function selectBuilderStrategy(strategy) {
-    state.selectedStrategy = strategy;
+    const problem = state.builderState.problem;
+    state.builderState.selectedStrategy = strategy;
     
-    // Update buttons
-    document.querySelectorAll('.strategy-btn').forEach(btn => {
-        btn.classList.remove('selected');
+    // Visual feedback
+    document.querySelectorAll('#builder-strategy-options .strategy-card').forEach(card => {
+        card.classList.remove('selected');
     });
-    event.target.closest('.strategy-btn').classList.add('selected');
+    event.target.closest('.strategy-card').classList.add('selected');
     
-    // Show feedback
-    const feedback = document.getElementById('strategy-feedback');
-    feedback.style.display = 'flex';
+    // Provide feedback
+    const feedbackDiv = document.getElementById('strategy-feedback');
     
-    if (strategy === state.currentProblem.preferredStrategy) {
-        feedback.className = 'feedback-display success';
-        feedback.innerHTML = '<strong>Excellent choice!</strong><br>This approach works well for this statement.';
-    } else {
-        feedback.className = 'feedback-display info';
-        feedback.innerHTML = '<strong>Good thinking!</strong><br>This approach can work too. Let\'s proceed!';
+    // Check how many strategies are available
+    const totalStrategies = [
+        ...problem.naturalStrategies,
+        ...(problem.possibleStrategies || []),
+        ...(problem.difficultStrategies || [])
+    ].length;
+    
+    if (problem.naturalStrategies.includes(strategy)) {
+        let reason = '';
+        if (strategy === 'direct') reason = problem.whyDirect;
+        else if (strategy === 'contrapositive') reason = problem.whyContrapositive;
+        else if (strategy === 'contradiction') reason = problem.whyContradiction;
+        
+        // Different message if it's the only option
+        if (totalStrategies === 1) {
+            feedbackDiv.innerHTML = `
+                <div class="feedback-box success">
+                    <strong>Correct approach!</strong><br>
+                    ${reason}<br>
+                    <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        This is the only appropriate strategy for this problem.
+                    </small>
+                </div>
+            `;
+        } else {
+            feedbackDiv.innerHTML = `
+                <div class="feedback-box success">
+                    <strong>Excellent choice!</strong><br>
+                    ${reason}
+                </div>
+            `;
+        }
+    } else if ((problem.possibleStrategies || []).includes(strategy)) {
+        feedbackDiv.innerHTML = `
+            <div class="feedback-box info">
+                <strong>This works too!</strong><br>
+                ${strategy === 'contradiction' ? problem.whyContradiction : 'This approach is valid but may be less elegant.'}
+            </div>
+        `;
+    } else if ((problem.difficultStrategies || []).includes(strategy)) {
+        feedbackDiv.innerHTML = `
+            <div class="feedback-box warning">
+                <strong>This is challenging!</strong><br>
+                ${problem.whyNotDirect}
+            </div>
+        `;
     }
     
-    // Show next step
-    if (strategy === 'contradiction') {
-        document.getElementById('alternative-section').classList.add('active');
-        document.getElementById('builder-alternative-input').value = '';
-        document.getElementById('builder-alternative-input').disabled = false;
-        document.getElementById('builder-alternative-feedback').style.display = 'none';
-        document.getElementById('alternative-actions').style.display = 'none';
-        const quickCheckBtn = document.getElementById('quick-check-btn');
-        if (quickCheckBtn) quickCheckBtn.style.display = 'inline-block';
-        state.attemptCounts.builder = 0; // Reset attempts for new section
+    // Show alternative section for indirect proofs
+    if (strategy !== 'direct') {
+        document.getElementById('alternative-section').style.display = 'block';
+        document.getElementById('chosen-method').textContent = strategy;
+        document.getElementById('builder-alternative').value = '';
+        document.getElementById('builder-alternative-feedback').innerHTML = '';
     } else {
-        document.getElementById('alternative-section').classList.remove('active');
+        document.getElementById('alternative-section').style.display = 'none';
         buildProofStructure();
     }
 }
 
-// Proof Builder Alternative Check Functions
 function checkBuilderAlternative() {
-    const input = document.getElementById('builder-alternative-input').value.trim();
-    const feedback = document.getElementById('builder-alternative-feedback');
-    const actionsDiv = document.getElementById('alternative-actions');
+    const problem = state.builderState.problem;
+    const strategy = state.builderState.selectedStrategy;
+    const input = document.getElementById('builder-alternative').value.trim();
     
     if (!input) {
-        feedback.style.display = 'flex';
-        feedback.className = 'feedback-display info';
-        feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
-        actionsDiv.style.display = 'none';
+        document.getElementById('builder-alternative-feedback').innerHTML = `
+            <div class="feedback-box warning">
+                Please enter your assumption!
+            </div>
+        `;
         return;
     }
     
-    state.attemptCounts.builder++;
-    const attemptCount = state.attemptCounts.builder;
+    state.builderState.attempts++;
     
-    // Keep input active - never disable it
-    const inputField = document.getElementById('builder-alternative-input');
-    inputField.disabled = false;
-    
-    feedback.style.display = 'flex';
-    actionsDiv.style.display = 'flex';
-    
-    // Hide quick check button after first check
-    const quickCheckBtn = document.getElementById('quick-check-btn');
-    if (quickCheckBtn) {
-        quickCheckBtn.style.display = 'none';
+    // Determine correct assumption based on strategy
+    let correctAssumption = '';
+    if (strategy === 'contrapositive') {
+        if (problem.contrapositiveProof) {
+            correctAssumption = problem.contrapositiveProof.assumption;
+        }
+    } else if (strategy === 'contradiction') {
+        if (problem.contradictionProof) {
+            correctAssumption = problem.contradictionProof.assumption;
+        }
     }
     
-    // Analyze the answer
+    // More intelligent checking - look for the key mathematical content
     const inputLower = input.toLowerCase();
-    const correctLower = state.currentProblem.alternative.toLowerCase();
+    let isCorrect = false;
     
-    // Check for correctness
-    const keyWords = correctLower.split(' ').filter(word => word.length > 3);
-    const matchCount = keyWords.filter(word => inputLower.includes(word)).length;
-    const matchRatio = keyWords.length > 0 ? matchCount / keyWords.length : 0;
-    
-    let isCorrect = matchRatio > 0.7;
-    let isPartial = matchRatio > 0.3;
-    
-    // Generate specific feedback based on what they wrote and attempt number
-    let feedbackHTML = '';
+    // Check based on problem type
+    if (problem.statement.includes('does not exist')) {
+        // For non-existence, check if they're assuming existence
+        isCorrect = (inputLower.includes('exist') || inputLower.includes('there is')) &&
+                   inputLower.includes('integer') &&
+                   (inputLower.includes('n^2') || inputLower.includes('n²'));
+    } else if (problem.statement.includes('irrational')) {
+        // For irrationality, check if they're assuming rationality
+        isCorrect = inputLower.includes('rational') && 
+                   !inputLower.includes('irrational');
+    } else if (strategy === 'contrapositive') {
+        // For contrapositive, check for the negation of conclusion
+        isCorrect = inputLower.includes('odd') && inputLower.includes('n');
+    } else if (strategy === 'contradiction') {
+        // For contradiction on implications, check for both parts
+        if (problem.statement.includes('then')) {
+            isCorrect = (inputLower.includes('even') && inputLower.includes('odd')) ||
+                       (inputLower.includes('but') || inputLower.includes('and'));
+        } else {
+            // For other contradictions, check for opposite
+            isCorrect = inputLower.includes('exist') || 
+                       inputLower.includes('rational') ||
+                       inputLower.includes('largest') ||
+                       inputLower.includes('finite');
+        }
+    }
     
     if (isCorrect) {
-        feedback.className = 'feedback-display success';
-        feedbackHTML = `
-            <div class="feedback-section">
-                <strong>✅ Excellent!</strong>
-                Yes, for proof by contradiction we assume: "${state.currentProblem.alternative}"<br>
-                You've correctly identified what to assume. Ready to construct the proof?
+        document.getElementById('builder-alternative-feedback').innerHTML = `
+            <div class="feedback-box success">
+                <strong>Correct!</strong> That's exactly right.<br>
+                More formally: ${correctAssumption}<br>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
+                    Continue to Proof →
+                </button>
             </div>
         `;
-        
-        // Show only the continue button for correct answers
-        actionsDiv.innerHTML = `
-            <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn">Continue to Proof →</button>
+    } else if (state.builderState.attempts <= 2) {
+        // Give helpful hints for first attempts
+        document.getElementById('builder-alternative-feedback').innerHTML = `
+            <div class="feedback-box info">
+                <strong>Not quite.</strong> ${
+                    strategy === 'contradiction' ? 
+                    'For proof by contradiction, assume the exact opposite of what you want to prove.' :
+                    'For contrapositive, assume the negation of the conclusion.'
+                }<br>
+                Try again or see the answer below.
+                ${state.builderState.attempts >= 2 ? `<br><br>
+                <strong>The correct assumption is:</strong><br>
+                ${correctAssumption}<br>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
+                    Continue with this →
+                </button>` : ''}
+            </div>
         `;
-        
-    } else if (isPartial) {
-        feedback.className = 'feedback-display info';
-        
-        // Progressive feedback based on attempts
-        if (attemptCount === 1) {
-            feedbackHTML = `
-                <div class="feedback-section">
-                    <strong>Good start!</strong>
-                    You wrote "<em>${input}</em>" - you're on the right track!<br>
-                    ${getPartialFeedback(input, state.currentProblem)}
-                </div>
-            `;
-        } else if (attemptCount === 2) {
-            feedbackHTML = `
-                <div class="feedback-section">
-                    <strong>Getting closer!</strong>
-                    You wrote "<em>${input}</em>"<br>
-                    ${getMoreSpecificFeedback(input, state.currentProblem)}
-                </div>
-            `;
-        } else {
-            feedbackHTML = `
-                <div class="feedback-section">
-                    <strong>You're almost there!</strong>
-                    You wrote "<em>${input}</em>"<br>
-                    The complete negation is: "<strong>${state.currentProblem.alternative}</strong>"<br>
-                    Try to match this format exactly, or you can proceed with the proof.
-                </div>
-            `;
-        }
-        
     } else {
-        feedback.className = 'feedback-display info';
-        
-        // Progressive feedback for incorrect answers
-        if (attemptCount === 1) {
-            feedbackHTML = `
-                <div class="feedback-section">
-                    <strong>Let's think about this differently:</strong>
-                    You wrote "<em>${input}</em>"<br>
-                    ${getInitialGuidance(state.currentProblem)}
-                </div>
-            `;
-        } else if (attemptCount === 2) {
-            feedbackHTML = `
-                <div class="feedback-section">
-                    <strong>Here's a more specific hint:</strong>
-                    You wrote "<em>${input}</em>"<br>
-                    ${getStructuredGuidance(state.currentProblem)}
-                </div>
-            `;
-        } else {
-            feedbackHTML = `
-                <div class="feedback-section">
-                    <strong>Let me help you understand:</strong>
-                    The original statement is: "${state.currentProblem.statement}"<br>
-                    For proof by contradiction, we assume: "<strong>${state.currentProblem.alternative}</strong>"<br>
-                    This is the exact opposite of what we want to prove.
-                </div>
-            `;
-        }
-    }
-    
-    feedback.innerHTML = feedbackHTML + `<div class="attempt-counter">Attempt ${attemptCount}</div>`;
-    
-    // Show appropriate action buttons (only if not correct)
-    if (!isCorrect) {
-        actionsDiv.innerHTML = `
-            <button onclick="checkBuilderAlternative()" class="try-again-btn">Try Again</button>
-            <button onclick="getStructuredHint()" class="hint-btn">Get Hint</button>
-            <button onclick="challengeAIBuilder()" class="challenge-btn">Challenge AI</button>
-            <button id="show-answer-btn" onclick="showBuilderAnswer()" class="show-answer-btn" style="display: ${attemptCount >= 3 ? 'inline-block' : 'none'};">Show Answer</button>
-            <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn" style="display: none;">Continue to Proof →</button>
+        // After multiple attempts, show the answer
+        document.getElementById('builder-alternative-feedback').innerHTML = `
+            <div class="feedback-box info">
+                <strong>The correct assumption is:</strong><br>
+                ${correctAssumption}<br>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="buildProofStructure()">
+                    Continue with this →
+                </button>
+            </div>
         `;
     }
     
-    // Typeset math
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([feedback]);
-    }
+    renderMath();
 }
 
-function getPartialFeedback(input, problem) {
-    // Context-aware feedback for partial answers
-    const statementType = document.getElementById('statement-type').value;
-    
-    if (statementType === 'implication') {
-        if (input.includes('odd') || input.includes('not even')) {
-            return "You have the conclusion part right! But for implications (If P then Q), the negation needs both: 'P is true AND Q is false'.";
-        }
-        return "For implications, remember: the negation is 'the premise is true BUT the conclusion is false'.";
-    } else if (statementType === 'universal') {
-        return "You're thinking about negating 'all'. The negation of 'all' is 'there exists at least one' that doesn't satisfy the property.";
-    } else if (statementType === 'existence') {
-        return "To negate 'there exists', we say 'for all' or 'none exist'. Think about what that means for this specific statement.";
-    }
-    return "You're on the right track! Think about the exact opposite of the statement we want to prove.";
-}
-
-function getMoreSpecificFeedback(input, problem) {
-    const statementType = document.getElementById('statement-type').value;
-    
-    if (statementType === 'implication') {
-        return `For the statement "${problem.statement}", we need BOTH parts: the hypothesis must be true AND the conclusion must be false. Can you combine both parts?`;
-    } else if (statementType === 'universal') {
-        return `The statement says "all" or "every". To negate it, we need "there exists at least one" counterexample. What would that counterexample be?`;
-    } else if (statementType === 'existence') {
-        return `The statement says "there exists". To negate it, we need "for all" or "none". How would you express that none exist?`;
-    }
-    return `The exact negation of "${problem.statement}" would be to assume the complete opposite. What's the opposite of this claim?`;
-}
-
-function getInitialGuidance(problem) {
-    const statementType = document.getElementById('statement-type').value;
-    const typeGuidance = {
-        'bare': "For a simple statement P, the negation is just 'not P'. What's the opposite of the given statement?",
-        'implication': "For 'If P then Q', the negation is 'P is true AND Q is false'. Identify both parts.",
-        'universal': "For 'All x have property P', the negation is 'There exists at least one x without property P'.",
-        'existence': "For 'There exists x with property P', the negation is 'All x do NOT have property P'."
-    };
-    return typeGuidance[statementType] || "Think about what would make the original statement false.";
-}
-
-function getStructuredGuidance(problem) {
-    const statementType = document.getElementById('statement-type').value;
-    
-    if (statementType === 'implication' && problem.statement.includes('even')) {
-        return "The statement is 'If n is even, then n² is even'. The negation is: 'n IS even AND n² is NOT even'. Try writing this more concisely.";
-    } else if (statementType === 'bare') {
-        return `If we want to prove "${problem.statement}" by contradiction, we assume the opposite. What's the opposite of this property?`;
-    }
-    return `Look at the structure: "${problem.statement}". The negation has a specific logical form. Try to match that structure.`;
-}
-
-function getStructuredHint() {
-    const feedback = document.getElementById('builder-alternative-feedback');
-    const statementType = document.getElementById('statement-type').value;
-    
-    const hints = {
-        'bare': `<strong>Structured Hint:</strong><br>
-                Statement: ${state.currentProblem.statement}<br>
-                Pattern: To negate P, assume ¬P<br>
-                Think: What's the direct opposite?`,
-        'implication': `<strong>Structured Hint:</strong><br>
-                       Statement: ${state.currentProblem.statement}<br>
-                       Pattern: To negate (P → Q), assume (P ∧ ¬Q)<br>
-                       Think: "The premise holds BUT the conclusion fails"`,
-        'universal': `<strong>Structured Hint:</strong><br>
-                     Statement: ${state.currentProblem.statement}<br>
-                     Pattern: To negate (∀x P(x)), assume (∃x ¬P(x))<br>
-                     Think: "Find one counterexample"`,
-        'existence': `<strong>Structured Hint:</strong><br>
-                     Statement: ${state.currentProblem.statement}<br>
-                     Pattern: To negate (∃x P(x)), assume (∀x ¬P(x))<br>
-                     Think: "None exist" or "All fail to have the property"`
-    };
-    
-    feedback.style.display = 'flex';
-    feedback.className = 'feedback-display info';
-    feedback.innerHTML = `
-        <div class="hint-progression">
-            ${hints[statementType]}
-        </div>
-    `;
-    
-    // Typeset math
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([feedback]);
-    }
-}
-
-function showBuilderAnswer() {
-    const feedback = document.getElementById('builder-alternative-feedback');
-    const actionsDiv = document.getElementById('alternative-actions');
-    
-    feedback.className = 'feedback-display success';
-    feedback.innerHTML = `
-        <div class="correct-answer-reveal">
-            <strong>The correct alternative is:</strong><br>
-            "${state.currentProblem.alternative}"<br><br>
-            This is what we assume for proof by contradiction. Now let's construct the proof!
-        </div>
-    `;
-    
-    // Update actions to only show continue
-    actionsDiv.innerHTML = `
-        <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn">Continue to Proof →</button>
-    `;
-    
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([feedback]);
-    }
-}
-
-function proceedWithProof() {
-    buildProofStructure();
-}
-
-async function challengeAIBuilder() {
-    const input = document.getElementById('builder-alternative-input').value.trim();
-    const feedback = document.getElementById('builder-alternative-feedback');
-    const challengeBtn = document.querySelector('.challenge-btn');
-    
-    if (!input) {
-        feedback.style.display = 'flex';
-        feedback.className = 'feedback-display info';
-        feedback.innerHTML = '<strong>Please enter your answer first!</strong>';
-        return;
-    }
-    
-    challengeBtn.disabled = true;
-    challengeBtn.textContent = 'AI Analyzing...';
-    
-    try {
-        const prompt = `You are a supportive mathematics tutor. The student is learning proof by contradiction and needs to identify what to assume.
-
-Original statement to prove: "${state.currentProblem.statement}"
-Student's proposed assumption: "${input}"
-Correct assumption for contradiction: "${state.currentProblem.alternative}"
-Attempt number: ${state.attemptCounts.builder}
-
-Analyze their answer and provide guided feedback:
-
-If completely correct: Celebrate their understanding!
-If partially correct (has key ideas but not complete): 
-- Acknowledge what they got right specifically
-- Give ONE specific hint about what's missing WITHOUT revealing the answer
-- Encourage them to modify their answer and try again
-
-If incorrect:
-- Acknowledge their effort
-- Give a hint about the logical structure without giving the answer
-- Focus on one specific aspect they should think about
-
-Use $ for LaTeX math notation where appropriate.
-Be encouraging and pedagogical. Reference their specific input.
-Keep response to 2-3 sentences maximum.
-End with an encouraging prompt to try again if they're not correct yet.`;
-
-        const response = await callAI(prompt);
-        
-        feedback.style.display = 'flex';
-        
-        // Process response for LaTeX
-        const processedResponse = response.replace(/\$([^$]+)\$/g, (match, p1) => {
-            return `$${p1}$`;
-        });
-        
-        // Check if response indicates success
-        const isSuccess = response.toLowerCase().includes('correct') && 
-                        (response.toLowerCase().includes('excellent') || 
-                        response.toLowerCase().includes('perfect') ||
-                        response.toLowerCase().includes('exactly right'));
-        
-        if (isSuccess) {
-            feedback.className = 'feedback-display success';
-            feedback.innerHTML = `
-                <div class="feedback-section">
-                    <strong>AI Feedback:</strong><br>
-                    ${processedResponse}
-                </div>
-            `;
-            
-            // Update actions for success
-            const actionsDiv = document.getElementById('alternative-actions');
-            actionsDiv.innerHTML = `
-                <button id="continue-btn" onclick="proceedWithProof()" class="nav-btn">Continue to Proof →</button>
-            `;
-        } else {
-            feedback.className = 'feedback-display info';
-            feedback.innerHTML = `
-                <div class="feedback-section">
-                    <strong>AI Feedback:</strong><br>
-                    ${processedResponse}
-                </div>
-                <div class="attempt-counter">AI consulted after ${state.attemptCounts.builder} attempts</div>
-            `;
-        }
-        
-        // Typeset math
-        if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise([feedback]);
-        }
-        
-    } catch (error) {
-        console.error('AI challenge failed:', error);
-        feedback.style.display = 'flex';
-        feedback.className = 'feedback-display error';
-        feedback.innerHTML = `
-            <strong>AI temporarily unavailable.</strong><br>
-            Try using the "Get Hint" button for structured guidance, or keep trying on your own!
-        `;
-    }
-    
-    challengeBtn.disabled = false;
-    challengeBtn.textContent = 'Challenge AI';
-}
-
-// Proof Construction Functions
 function buildProofStructure() {
-    const construction = document.getElementById('proof-construction');
-    construction.classList.add('active');
+    const problem = state.builderState.problem;
+    const strategy = state.builderState.selectedStrategy;
     
-    // Set title
-    const title = state.selectedStrategy === 'contradiction' ?
-        'Step 3: Construct the Proof by Contradiction' :
-        'Step 2: Construct the Direct Proof';
-    document.getElementById('construction-title').textContent = title;
+    document.getElementById('proof-construction').style.display = 'block';
     
-    // Build structure
-    const structure = document.getElementById('proof-structure');
-    structure.innerHTML = '';
+    let structure = '';
+    let steps = [];
     
-    if (state.selectedStrategy === 'contradiction') {
-        // Contradiction proof structure: 4 boxes
-        structure.innerHTML = `
+    if (strategy === 'direct' && problem.directProof) {
+        structure = `
+            <div class="proof-box given">
+                <div class="box-label">Given</div>
+                <div>${problem.directProof.assumption}</div>
+            </div>
+            <div class="proof-box">
+                <div class="box-label">Proof Steps (drag to reorder)</div>
+                <div class="sortable-area" id="steps-area"></div>
+            </div>
+            <div class="proof-box conclusion">
+                <div class="box-label">Therefore</div>
+                <div>${problem.directProof.conclusion}</div>
+            </div>
+        `;
+        steps = problem.directProof.steps;
+        
+    } else if (strategy === 'contrapositive' && problem.contrapositiveProof) {
+        structure = `
+            <div class="proof-box assumption">
+                <div class="box-label">Contrapositive Assumption</div>
+                <div>${problem.contrapositiveProof.assumption}</div>
+            </div>
+            <div class="proof-box">
+                <div class="box-label">Proof Steps (drag to reorder)</div>
+                <div class="sortable-area" id="steps-area"></div>
+            </div>
+            <div class="proof-box conclusion">
+                <div class="box-label">Therefore</div>
+                <div>${problem.contrapositiveProof.conclusion}</div>
+            </div>
+        `;
+        steps = problem.contrapositiveProof.steps;
+        
+    } else if (strategy === 'contradiction' && problem.contradictionProof) {
+        structure = `
             <div class="proof-box assumption">
                 <div class="box-label">Assumption for Contradiction</div>
-                <div class="statement-display">${state.currentProblem.contradictionProof.assumption}</div>
+                <div>${problem.contradictionProof.assumption}</div>
             </div>
-            
-            <div class="proof-box steps-container">
-                <div class="box-label">Proof Steps (arrange in correct order)</div>
+            <div class="proof-box">
+                <div class="box-label">Proof Steps (drag to reorder)</div>
                 <div class="sortable-area" id="steps-area"></div>
             </div>
-            
             <div class="proof-box contradiction">
-                <div class="box-label">Derive Contradiction</div>
-                <div class="statement-display">${state.currentProblem.contradictionProof.contradiction}</div>
+                <div class="box-label">Contradiction!</div>
+                <div>${problem.contradictionProof.contradiction}</div>
             </div>
-            
             <div class="proof-box conclusion">
                 <div class="box-label">Therefore</div>
-                <div class="statement-display">${state.currentProblem.statement} ✓</div>
+                <div>${problem.contradictionProof.conclusion}</div>
             </div>
         `;
-    } else {
-        // Direct proof structure: 3 boxes
-        structure.innerHTML = `
-            <div class="proof-box given">
-                <div class="box-label">Given/Assumption</div>
-                <div class="statement-display">${state.currentProblem.directProof.assumption}</div>
-            </div>
-            
-            <div class="proof-box steps-container">
-                <div class="box-label">Proof Steps (arrange in correct order)</div>
-                <div class="sortable-area" id="steps-area"></div>
-            </div>
-            
-            <div class="proof-box conclusion">
-                <div class="box-label">Therefore</div>
-                <div class="statement-display">${state.currentProblem.directProof.conclusion}</div>
-            </div>
-        `;
+        steps = problem.contradictionProof.steps;
     }
     
-    // Add steps
-    populateSteps();
+    document.getElementById('proof-structure').innerHTML = structure;
     
-    // Typeset math
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([structure]);
-    }
-}
-
-function populateSteps() {
-    const area = document.getElementById('steps-area');
-    if (!area) return;
-    
-    // Store original order
-    state.originalStepsOrder = [...state.currentProblem.steps];
-    
-    // Shuffle steps
-    const shuffled = [...state.currentProblem.steps].sort(() => Math.random() - 0.5);
-    
-    // Create step elements
-    area.innerHTML = '';
-    shuffled.forEach((step, i) => {
-        const div = document.createElement('div');
-        div.className = 'proof-step';
-        div.draggable = true;
-        div.innerHTML = step;
-        div.dataset.originalIndex = state.originalStepsOrder.indexOf(step);
+    // Add shuffled steps
+    if (steps && steps.length > 0) {
+        const shuffled = [...steps].sort(() => Math.random() - 0.5);
+        const stepsArea = document.getElementById('steps-area');
         
-        // Drag events
-        div.addEventListener('dragstart', handleDragStart);
-        div.addEventListener('dragend', handleDragEnd);
-        div.addEventListener('dragover', handleDragOver);
-        div.addEventListener('drop', handleDrop);
-        
-        area.appendChild(div);
-    });
-    
-    // Typeset math in steps
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([area]);
+        shuffled.forEach((step, i) => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'proof-step';
+            stepDiv.draggable = true;
+            stepDiv.innerHTML = step;
+            stepDiv.dataset.originalIndex = steps.indexOf(step);
+            
+            // Drag handlers
+            stepDiv.addEventListener('dragstart', handleDragStart);
+            stepDiv.addEventListener('dragend', handleDragEnd);
+            stepDiv.addEventListener('dragover', handleDragOver);
+            stepDiv.addEventListener('drop', handleDrop);
+            
+            stepsArea.appendChild(stepDiv);
+        });
     }
+    
+    renderMath();
 }
 
 // Drag and drop handlers
 function handleDragStart(e) {
-    state.draggedElement = e.target;
+    state.builderState.draggedElement = e.target;
     e.target.classList.add('dragging');
 }
 
@@ -2355,9 +1372,9 @@ function handleDragOver(e) {
     const area = document.getElementById('steps-area');
     const afterElement = getDragAfterElement(area, e.clientY);
     if (afterElement == null) {
-        area.appendChild(state.draggedElement);
+        area.appendChild(state.builderState.draggedElement);
     } else {
-        area.insertBefore(state.draggedElement, afterElement);
+        area.insertBefore(state.builderState.draggedElement, afterElement);
     }
 }
 
@@ -2380,7 +1397,6 @@ function getDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// Check proof
 function checkProof() {
     const steps = document.querySelectorAll('#steps-area .proof-step');
     let correct = true;
@@ -2395,79 +1411,58 @@ function checkProof() {
         }
     });
     
-    const feedback = document.getElementById('proof-feedback');
-    feedback.style.display = 'flex';
-    
+    const feedbackDiv = document.getElementById('proof-feedback');
     if (correct) {
-        feedback.className = 'feedback-display success';
-        feedback.innerHTML = '<strong>Perfect!</strong> Your proof is logically correct!';
-        showCompleteProof();
+        feedbackDiv.innerHTML = `
+            <div class="feedback-box success">
+                <strong>Perfect!</strong> You've constructed a valid ${state.builderState.selectedStrategy} proof!
+            </div>
+        `;
     } else {
-        feedback.className = 'feedback-display info';
-        feedback.innerHTML = 'Not quite right. Green steps are correctly placed. Keep trying!';
+        feedbackDiv.innerHTML = `
+            <div class="feedback-box info">
+                Some steps are out of order. Green highlights show correctly placed steps.
+            </div>
+        `;
     }
 }
 
-// Show complete proof
-function showCompleteProof() {
-    const completeProof = document.getElementById('complete-proof');
-    const content = document.getElementById('proof-content');
-    
-    let html = `<p><strong>Theorem:</strong> ${state.currentProblem.statement}</p>`;
-    
-    if (state.selectedStrategy === 'contradiction') {
-        html += `<p><strong>Proof by Contradiction:</strong></p>`;
-        html += `<p>${state.currentProblem.contradictionProof.assumption}</p>`;
-        state.currentProblem.steps.forEach(step => {
-            html += `<p>${step}</p>`;
-        });
-        html += `<p>${state.currentProblem.contradictionProof.contradiction}</p>`;
-        html += `<p>Therefore, ${state.currentProblem.statement}.</p>`;
-    } else {
-        html += `<p><strong>Direct Proof:</strong></p>`;
-        html += `<p>${state.currentProblem.directProof.assumption}</p>`;
-        state.currentProblem.steps.forEach(step => {
-            html += `<p>${step}</p>`;
-        });
-        html += `<p>${state.currentProblem.directProof.conclusion}</p>`;
-    }
-    
-    html += '<div class="qed">∎</div>';
-    
-    content.innerHTML = html;
-    completeProof.classList.add('active');
-    
-    // Typeset math
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([content]);
-    }
-}
-
-// Reset proof
 function resetProof() {
-    populateSteps();
-    document.querySelectorAll('.proof-step').forEach(step => {
-        step.classList.remove('correct');
-    });
-    document.getElementById('proof-feedback').style.display = 'none';
-    document.getElementById('complete-proof').classList.remove('active');
+    buildProofStructure();
+    document.getElementById('proof-feedback').innerHTML = '';
 }
 
-// Show hint
-function showHint() {
-    const feedback = document.getElementById('proof-feedback');
-    feedback.style.display = 'flex';
-    feedback.className = 'feedback-display info';
-    feedback.innerHTML = `<strong>💡 Hint:</strong> ${state.currentProblem.hint}`;
+function getHint() {
+    const problem = state.builderState.problem;
+    const hints = {
+        'direct': "Think about how the given information leads to the conclusion step by step.",
+        'contrapositive': "You're proving the contrapositive. Start with the negation of the conclusion.",
+        'contradiction': "You've assumed the negation. Look for where the logical conflict arises."
+    };
     
-    // Typeset math
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([feedback]);
+    document.getElementById('proof-feedback').innerHTML = `
+        <div class="feedback-box info">
+            <strong>Hint:</strong> ${hints[state.builderState.selectedStrategy]}
+        </div>
+    `;
+}
+
+// Math rendering
+function renderMath() {
+    if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+            delimiters: [
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ]
+        });
     }
 }
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', init);
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    renderMath();
+});
     </script>
 </body>
 </html>
